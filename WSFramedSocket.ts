@@ -1,7 +1,9 @@
 import { AsyncAutoResetEvent } from './coordination/AsyncAutoResetEvent';
 import { AsyncEventWaitHandle } from './coordination/AsyncEventWaitHandle';
 import { AsyncManualResetEvent } from './coordination/AsyncManualResetEvent';
+import { Connection } from './Connection';
 import { FramedSocketError, IFramedSocket } from './IFramedSocket';
+import { Message } from './Message';
 import { Queue } from './Queue';
 
 // React Native doesn't like any require statement whatsoever to the 'ws' library, at it depends on Node's 'util'
@@ -16,6 +18,31 @@ const WS_CLOSED = 3;
  * Maps a WebSocket to the IFramedSocket interface
  */
 export class WSFramedSocket implements IFramedSocket {
+  /**
+   * Creates a Connection object backed by an underlying WebSocket
+   * @param url URL to connect to
+   * @param onMessageReceived Callback handler
+   * @returns Established Connection object
+   */
+  public static async connect(url: string, onMessageReceived: (message: Message) => Promise<void>):
+      Promise<Connection> {
+    let ws = new WebSocket(url);
+    ws.binaryType = 'arraybuffer';
+
+    // Use an event to await a state change
+    let stateChange = new AsyncManualResetEvent();
+    ws.onopen = () => { stateChange.set(); }
+    ws.onerror = () => { stateChange.set(); };
+    ws.onclose = () => { stateChange.set(); };
+    await stateChange.waitAsync();
+
+    if (ws.readyState !== WS_OPEN) {
+      throw 'Failed to established WebSocket. State=' + ws.readyState;
+    }
+
+    return new Connection(new WSFramedSocket(ws), onMessageReceived);
+  }
+  
   public constructor(ws: WebSocket) {
     // The WebSocket must be open before calling this constructor
     if (ws.readyState !== WS_OPEN) {
