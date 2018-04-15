@@ -141,8 +141,7 @@ export class DataFrameControl {
 
     // Copy the header
     if (headerLength > 0) {
-      this.header = new Uint8Array(headerLength);
-      this.header.set(frame, startIndex + 8);
+      this.header = frame.subarray(startIndex + 8, startIndex + 8 + headerLength);
     }
 
     return headerLength + 8;
