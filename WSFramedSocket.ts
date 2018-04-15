@@ -104,7 +104,7 @@ export class WSFramedSocket implements IFramedSocket {
   }
 
   public closeAsync(closeReason: string, waitForRemote: boolean): void {
-    this._ws.close(1005, closeReason);
+    this._ws.close(1000, closeReason);
   }
 
   private _ws: WebSocket;
