@@ -41,9 +41,9 @@ export class Connection {
 
     // Start the worker threads
     this._tasks = [];
-    setTimeout(() => this._tasks[0] = this._receiveLoop(), 0);
-    setTimeout(() => this._tasks[1] = this._dispatchLoop(), 0);
-    setTimeout(() => this._tasks[2] = this._sendLoop(), 0);
+    this._tasks[0] = this._receiveLoop();
+    this._tasks[1] = this._dispatchLoop();
+    this._tasks[2] = this._sendLoop();
   }
 
   /**
