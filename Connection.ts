@@ -65,7 +65,11 @@ export class Connection {
    * @returns String describing the reason for closing
    */
   public async waitClose(): Promise<string> {
-    this._tasks.forEach(async task => { await task });
+    // A forEach loop doesn't properly await async tasks. Use a traditional for loop to avoid this.
+    for (let n = 0; n < this._tasks.length; n++) {
+      await this._tasks[n];
+    }
+    
     return this._closeReason;
   }
 
