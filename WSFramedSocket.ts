@@ -26,37 +26,41 @@ export class WSFramedSocket implements IFramedSocket {
    */
   public static async connect(url: string, onMessageReceived: (message: Message) => Promise<void>):
       Promise<Connection> {
+    // Create a client WebSocket
     let ws = new WebSocket(url);
     ws.binaryType = 'arraybuffer';
 
-    // Use an event to await a state change
-    let stateChange = new AsyncManualResetEvent();
-    ws.onopen = () => { stateChange.set(); }
-    ws.onerror = () => { stateChange.set(); };
-    ws.onclose = () => { stateChange.set(); };
-    await stateChange.waitAsync();
+    // Create the WSFramedSocket and wait for it to connect
+    let wsfs = new WSFramedSocket(ws);
+    await wsfs.waitForOpen();
 
-    if (ws.readyState !== WS_OPEN) {
-      throw 'Failed to established WebSocket. State=' + ws.readyState;
-    }
-
-    return new Connection(new WSFramedSocket(ws), onMessageReceived);
+    return new Connection(wsfs, onMessageReceived);
   }
   
-  public constructor(ws: WebSocket) {
-    // The WebSocket must be open before calling this constructor
-    if (ws.readyState !== WS_OPEN) {
-      throw 'Invalid WebSocket state ' + ws.readyState;
-    }
-
+  private constructor(ws: WebSocket) {
     this._ws = ws;
+    this._isOpen = new AsyncManualResetEvent();
     this._isClosed = new AsyncManualResetEvent();
     this._receiveQueue = new Queue<MessageEvent>();
     this._receiveEvent = new AsyncAutoResetEvent();
 
     ws.onmessage = e => { this._onServerMessage(e); }
+    ws.onopen = () => { this._isOpen.set(); }
     ws.onerror = () => { this._isClosed.set(); }
     ws.onclose = () => { this._isClosed.set(); }
+  }
+
+  /**
+   * Waits for the WebSocket to enter the open state. Throws an exception if it fails to open.
+   */
+  private async waitForOpen(): Promise<void> {
+    // Wait for either open or closed, whichever happens first
+    await AsyncEventWaitHandle.whenAny([this._isOpen, this._isClosed]);
+
+    // The WebSocket must be open before calling this constructor
+    if (this._ws.readyState !== WS_OPEN) {
+      throw 'Failed to established WebSocket. State=' + this._ws.readyState;
+    }
   }
 
   private _onServerMessage(e: MessageEvent): void {
@@ -108,6 +112,7 @@ export class WSFramedSocket implements IFramedSocket {
   }
 
   private _ws: WebSocket;
+  private _isOpen: AsyncManualResetEvent;
   private _isClosed: AsyncManualResetEvent;
   private _receiveQueue: Queue<MessageEvent>;
   private _receiveEvent: AsyncAutoResetEvent;
