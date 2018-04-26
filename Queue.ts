@@ -3,6 +3,9 @@ export class Queue<T> {
     this._values.push(value);
   }
 
+  /**
+   * @returns Last value in the queue, or undefined if the queue is empty
+   */
   public dequeue(): T | undefined {
     return this._values.shift();
   }

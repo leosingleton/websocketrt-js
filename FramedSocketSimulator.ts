@@ -1,7 +1,52 @@
 import { BinaryConverter } from './BinaryConverter';
+import { IFramedSocket, FramedSocketError } from './IFramedSocket';
 import { Message } from './Message';
+import { Queue } from './Queue';
+import { AsyncAutoResetEvent } from './coordination/AsyncAutoResetEvent';
+import { AsyncManualResetEvent } from './coordination/AsyncManualResetEvent';
+import { AsyncTimerEvent } from './coordination/AsyncTimerEvent';
+import { AsyncEventWaitHandle } from './coordination/AsyncEventWaitHandle';
 
+/** Simulates a WebSocket with latency for unit testing */
 export class FramedSocketSimulator {
+  /**
+   * Initializes the simulator
+   * @param latency Simulated latency (one direction), in milliseconds
+   * @param throughput Simulated throughput (each direction), in bytes/sec
+   */
+  public constructor(latency: number, throughput: number) {
+    this._isClosed = new AsyncManualResetEvent();
+
+    this._socket1 = new SocketSim(this, this._socket1ToSocket2, this._socket2ToSocket1, latency, throughput);
+    this._socket2 = new SocketSim(this, this._socket2ToSocket1, this._socket1ToSocket2, latency, throughput);
+  }
+
+  public getSocket1(): IFramedSocket {
+    return this._socket1;
+  }
+  private _socket1: IFramedSocket;
+
+  public getSocket2(): IFramedSocket {
+    return this._socket2;
+  }
+  private _socket2: IFramedSocket;
+
+  private _socket1ToSocket2 = new SimQueue();
+  private _socket2ToSocket1 = new SimQueue();
+
+  public getIsClosed(): AsyncManualResetEvent {
+    return this._isClosed;
+  }
+  private _isClosed: AsyncManualResetEvent;
+
+  public close(): void {
+    this._isClosed.set();
+
+    // Wake any receivers so they return a closing error code
+    this._socket1ToSocket2.event.set();
+    this._socket2ToSocket1.event.set();
+  }
+
   /**
    * Fills a message's payload with a specific test pattern that can be validated to ensure the payload was
    * properly split and reassembled.
@@ -42,4 +87,78 @@ export class FramedSocketSimulator {
 
     return true;
   }
+}
+
+class SocketSim implements IFramedSocket {
+  public constructor(sim: FramedSocketSimulator, sendQueue: SimQueue, receiveQueue: SimQueue, latency: number,
+      throughput: number) {
+    this._sim = sim;
+    this._sendQueue = sendQueue;
+    this._receiveQueue = receiveQueue;
+    this._latency = latency;
+    this._throughput = throughput;
+  }
+
+  private _sim: FramedSocketSimulator;
+  private _sendQueue: SimQueue;
+  private _receiveQueue: SimQueue;
+  private _latency: number;
+  private _throughput: number;
+
+  public async receiveFrameAsync(buffer: DataView): Promise<number> {
+    while (true) {
+      if (this._sim.getIsClosed().getIsSet()) {
+        return FramedSocketError.Closing;
+      }
+
+      let frame = this._receiveQueue.queue.dequeue();
+      if (frame) {
+        // Simulate latency
+        let timeRemaining = frame.deliveryTime - Date.now();
+        if (timeRemaining > 0) {
+          await AsyncTimerEvent.delay(timeRemaining);
+        }
+
+        // Simulate throughput
+        if (this._throughput > 0) {
+          let throughputDelay = frame.payload.byteLength * 1000 / this._throughput;
+          if (throughputDelay > 0) {
+            await AsyncTimerEvent.delay(throughputDelay);
+          }
+        }
+
+        if (frame.payload.byteLength > buffer.byteLength) {
+          return FramedSocketError.FrameTooLarge;
+        }
+
+        new Uint8Array(buffer.buffer).set(frame.payload);
+        return frame.payload.byteLength;
+      }
+
+      await AsyncEventWaitHandle.whenAny([this._receiveQueue.event, this._sim.getIsClosed()]);
+    }
+  }
+
+  public async sendFrameAsync(buffer: DataView): Promise<void> {
+    let frame = new SimFrame();
+    frame.payload = new Uint8Array(buffer.buffer);
+    frame.deliveryTime = Date.now() + this._latency;
+
+    this._sendQueue.queue.enqueue(frame);
+    this._sendQueue.event.set();
+  }
+
+  public async closeAsync(closeReason: string, waitForRemote: boolean): Promise<void> {
+    this._sim.close();
+  }
+}
+
+class SimQueue {
+  public queue = new Queue<SimFrame>();
+  public event = new AsyncAutoResetEvent();
+}
+
+class SimFrame {
+  public payload: Uint8Array;
+  public deliveryTime: number;
 }
