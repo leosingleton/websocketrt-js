@@ -113,7 +113,7 @@ export class BandwidthEstimator {
 /**
  * Calculates a moving average of a set of numbers
  */
-class MovingAverage {
+export class MovingAverage {
   public constructor(initialValue: number, maxValues: number) {
     this._maxValues = maxValues;
     this._values = new Queue<number>();
