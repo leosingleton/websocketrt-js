@@ -129,14 +129,14 @@ export class DataFrameControl {
     // MessageNumber lives in the upper 4 bits of Offset. IsFirst lives in the 5th-higest bit if Length.
     // IsLast lives in the 6th-highest.
     this.offset = BinaryConverter.readInt32(frame, startIndex);
-    this.messageNumber = (this.offset & 0xf0000000) >> 28;
+    this.messageNumber = (this.offset & 0xf0000000) >>> 28;
     this.isFirst = (this.offset & 0x08000000) !== 0;
     this.isLast = (this.offset & 0x04000000) !== 0;
     this.offset &= 0x03ffffff;
 
     // The header length lives in the upper 6 bits of Length
     this.length = BinaryConverter.readInt32(frame, startIndex + 4);
-    let headerLength = (this.length & 0xfc000000) >> 26;
+    let headerLength = (this.length & 0xfc000000) >>> 26;
     this.length &= 0x03ffffff;
 
     // Copy the header

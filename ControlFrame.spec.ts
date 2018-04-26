@@ -43,7 +43,7 @@ describe("ControlFrame", () => {
     frame2.read(bytes);
     expect(frame1.opCode).toEqual(frame2.opCode);
     expect(frame1.ackCount).toEqual(frame2.ackCount);
-    //expect(frame1.dataFrames).toEqual(frame2.dataFrames); // BUGBUG: This fails!
+    expect(frame1.dataFrames).toEqual(frame2.dataFrames);
     expect(frame1.rttEstimate).toEqual(frame2.rttEstimate);
     expect(frame1.throughputEstimate).toEqual(frame2.throughputEstimate);
   });
