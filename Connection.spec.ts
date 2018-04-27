@@ -39,9 +39,11 @@ describe("Connection", () => {
     FramedSocketSimulator.fillMessageWithTestPattern(message);
     await c1.send(message, 0);
 
-    // 1 MB should take 1.25 seconds at 256 KB/sec and 250 ms latency. Allow up to 5 seconds.
-    await waitForBytes(messageSize, 5);
-    expect(messageSize).toEqual(bytesReceived);
+    // 1 MB should take 4.25 seconds at 256 KB/sec and 250 ms latency. Allow anywhere from 4 to 8 seconds.
+    await AsyncTimerEvent.delay(4000);
+    expect(bytesReceived).toEqual(0);
+    await waitForBytes(messageSize, 4);
+    expect(bytesReceived).toEqual(messageSize);
     expect(messageReceived).toBeDefined();
     expect(FramedSocketSimulator.validateMessageTestPattern(messageReceived)).toBeTruthy();
 
@@ -51,9 +53,11 @@ describe("Connection", () => {
     bytesReceived = 0;
     await c2.send(message, 0);
 
-    // 1 MB should take 1.25 seconds at 256 KB/sec and 250 ms latency. Allow up to 5 seconds.
-    await waitForBytes(messageSize, 5);
-    expect(messageSize).toEqual(bytesReceived);
+    // 1 MB should take 4.25 seconds at 256 KB/sec and 250 ms latency. Allow anywhere from 4 to 8 seconds.
+    await AsyncTimerEvent.delay(4000);
+    expect(bytesReceived).toEqual(0);
+    await waitForBytes(messageSize, 4);
+    expect(bytesReceived).toEqual(messageSize);
     expect(messageReceived).toBeDefined();
     expect(FramedSocketSimulator.validateMessageTestPattern(messageReceived)).toBeTruthy();
 

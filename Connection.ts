@@ -250,6 +250,51 @@ export class Connection {
         resetBytesRemainingEvent = new AsyncTimerEvent(this._config.targetResponsiveness);
       }
 
+      if (this._sendPong) {
+        // Build a pong control frame
+        let controlFrame = new ControlFrame();
+        controlFrame.opCode = 17; // Pong
+        controlFrame.rttEstimate = this._localRttEstimate.getValue();
+        controlFrame.throughputEstimate = this._inboundThroughputEstimate.getValue();
+        let controlFrameBytes = controlFrame.write();
+
+        // Send the pong control frame
+        this._socket.sendFrameAsync(controlFrameBytes);
+        this._sendPong = false;
+      }
+
+      if (pingEvent.getIsSet()) {
+        // Only send a ping if there is not one currently outstanding
+        if (!this._pingResponseTimer) {
+          let controlFrame = new ControlFrame();
+          controlFrame.opCode = 16; // Ping
+          controlFrame.rttEstimate = this._localRttEstimate.getValue();
+          controlFrame.throughputEstimate = this._inboundThroughputEstimate.getValue();
+          let controlFrameBytes = controlFrame.write();
+
+          // Send the Ping frame
+          this._socket.sendFrameAsync(controlFrameBytes);
+
+          // Measure the amount of time until we receive a Pong
+          let timer = Date.now();
+          this._pingResponseTimer = timer;
+          this._pingCount++;
+        }
+
+        // Calculate the ping interval
+        let interval = this._config.pingInterval; // Ping every 10 seconds
+        if (this._pingCount < (this._config.pingInterval / this._config.initialPingInterval)) {
+          // For the first 10 seconds, ping at 1/second
+          interval = this._config.initialPingInterval;
+        }
+
+        // Randomize the interval by +/- 50%
+        let randomizedInterval = interval + (interval / 2) + (Math.random() * interval);
+
+        // Reset the ping timer
+        pingEvent = new AsyncTimerEvent(randomizedInterval);
+      }
+
       // Get the outgoing messages to send
       while (bytesRemaining > 0 && dataFrames.getCount() < 15) {
         let next = this._sendQueue.getNext(bytesRemaining);
@@ -277,19 +322,6 @@ export class Connection {
 
         message.bytesSent += frameLength;
         bytesRemaining -= frameLength;
-      }
-
-      while (this._sendPong) {
-        // Build a pong control frame
-        let controlFrame = new ControlFrame();
-        controlFrame.opCode = 17; // Pong
-        controlFrame.rttEstimate = this._localRttEstimate.getValue();
-        controlFrame.throughputEstimate = this._inboundThroughputEstimate.getValue();
-        let controlFrameBytes = controlFrame.write();
-
-        // Send the pong control frame
-        this._socket.sendFrameAsync(controlFrameBytes);
-        this._sendPong = false;
       }
 
       // If we have data to send, send it
@@ -321,24 +353,6 @@ export class Connection {
         }
       }
       
-      if (pingEvent.getIsSet()) {
-        let controlFrame = new ControlFrame();
-        controlFrame.opCode = 16; // Ping
-        controlFrame.rttEstimate = this._localRttEstimate.getValue();
-        controlFrame.throughputEstimate = this._inboundThroughputEstimate.getValue();
-        let controlFrameBytes = controlFrame.write();
-
-        // Send the Ping frame
-        this._socket.sendFrameAsync(controlFrameBytes);
-
-        // Measure the amount of time until we receive a Pong
-        let timer = Date.now();
-        this._pingResponseTimer = timer;
-
-        // Reset the ping timer
-        pingEvent = new AsyncTimerEvent(this._config.pingInterval);
-      }
-
       if (bytesRemaining > 0) {
         // Block until there are new messages, pings, or pongs to send
         await AsyncEventWaitHandle.whenAny([this._sendQueue.notEmptyEvent, pingEvent, this._pongEvent,
@@ -394,6 +408,11 @@ export class Connection {
    * Measures the interval between sending a Ping and receiving a Pong. This is used to calculate RTT.
    */
   private _pingResponseTimer: number;
+
+  /**
+   * Number of pings sent
+   */
+  private _pingCount = 0;
 
   /**
    * Name string for debugging

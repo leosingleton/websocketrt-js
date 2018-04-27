@@ -36,7 +36,12 @@ export class TransportConfig {
   /**
    * Interval between pings, in milliseconds.
    */
-  public pingInterval = 60000;
+  public pingInterval = 10000;
+
+  /**
+   * At startup, we temporarily increase the ping frequency to help the RTT and throughput estimates converge.
+   */
+  public initialPingInterval = 1000;
 
   /**
    * To avoid hitting TCP congestion control which will cause our throughput to vary wildly, we cap outgoing
