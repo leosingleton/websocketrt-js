@@ -251,29 +251,16 @@ export class Connection {
       }
 
       if (this._sendPong) {
-        // Build a pong control frame
-        let controlFrame = new ControlFrame();
-        controlFrame.opCode = 17; // Pong
-        controlFrame.rttEstimate = this._localRttEstimate.getValue();
-        controlFrame.throughputEstimate = this._inboundThroughputEstimate.getValue();
-        let controlFrameBytes = controlFrame.write();
-
         // Send the pong control frame
-        this._socket.sendFrameAsync(controlFrameBytes);
+        this.sendControlFrame(17);
         this._sendPong = false;
       }
 
       if (pingEvent.getIsSet()) {
         // Only send a ping if there is not one currently outstanding
         if (!this._pingResponseTimer) {
-          let controlFrame = new ControlFrame();
-          controlFrame.opCode = 16; // Ping
-          controlFrame.rttEstimate = this._localRttEstimate.getValue();
-          controlFrame.throughputEstimate = this._inboundThroughputEstimate.getValue();
-          let controlFrameBytes = controlFrame.write();
-
           // Send the Ping frame
-          this._socket.sendFrameAsync(controlFrameBytes);
+          this.sendControlFrame(16);
 
           // Measure the amount of time until we receive a Pong
           let timer = Date.now();
@@ -326,16 +313,8 @@ export class Connection {
 
       // If we have data to send, send it
       if (dataFrames.getCount() > 0) {
-        // Build a control frame
-        let controlFrame = new ControlFrame();
-        controlFrame.opCode = dataFrames.getCount();
-        controlFrame.rttEstimate = this._localRttEstimate.getValue();
-        controlFrame.throughputEstimate = this._inboundThroughputEstimate.getValue();
-        controlFrame.dataFrames = dataFrames.toArray();
-        let controlFrameBytes = controlFrame.write();
-
         // Send the control frame
-        this._socket.sendFrameAsync(controlFrameBytes);
+        this.sendControlFrame(dataFrames.getCount(), dataFrames.toArray());
 
         // Send the data frames
         while (dataFrames.getCount() > 0) {
@@ -363,6 +342,24 @@ export class Connection {
         await AsyncEventWaitHandle.whenAny([resetBytesRemainingEvent, this._pongEvent, this._isClosing]);
       }
     }
+  }
+
+  /**
+   * Creates and sends a control frame
+   * @param opCode Operation code of the control frame
+   * @param dataFrames Optional (depending on opCode) information about data frames that follow the control frame
+   */
+  private async sendControlFrame(opCode: number, dataFrames?: DataFrameControl[]): Promise<void> {
+    // Build a control frame
+    let controlFrame = new ControlFrame();
+    controlFrame.opCode = opCode;
+    controlFrame.rttEstimate = this._localRttEstimate.getValue();
+    controlFrame.throughputEstimate = this._inboundThroughputEstimate.getValue();
+    controlFrame.dataFrames = dataFrames;
+    let controlFrameBytes = controlFrame.write();
+
+    // Send the control frame
+    await this._socket.sendFrameAsync(controlFrameBytes);
   }
 
   /**
