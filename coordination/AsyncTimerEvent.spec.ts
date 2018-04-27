@@ -22,14 +22,14 @@ describe("AsyncTimerEvent", () => {
     let fireCount = 0;
     setTimeout(async () => {
       while (fireCount < 12) {
-        await timer.waitAsync(); // BUGBUG: For some reason this isn't blocking, and fireCount gets incremented quickly
+        await timer.waitAsync();
         fireCount++;
       }
-
-      await AsyncTimerEvent.delay(1000);
-      expect(fireCount).toBeGreaterThanOrEqual(9);
-      //expect(fireCount).toBeLessThanOrEqual(11); // BUGBUG: Disabled due to issue above
-      await AsyncTimerEvent.delay(500);
     });
+
+    await AsyncTimerEvent.delay(1000);
+    expect(fireCount).toBeGreaterThanOrEqual(9);
+    expect(fireCount).toBeLessThanOrEqual(11);
+    await AsyncTimerEvent.delay(500);
   });
 });
