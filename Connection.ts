@@ -1,4 +1,4 @@
-import { BandwidthEstimator } from './BandwidthEstimator';
+import { BandwidthEstimator } from './MovingAverage';
 import { ControlFrame, DataFrameControl } from './ControlFrame';
 import { AsyncAutoResetEvent } from './coordination/AsyncAutoResetEvent';
 import { AsyncManualResetEvent } from './coordination/AsyncManualResetEvent';
@@ -69,7 +69,7 @@ export class Connection {
     for (let n = 0; n < this._tasks.length; n++) {
       await this._tasks[n];
     }
-    
+
     return this._closeReason;
   }
 
