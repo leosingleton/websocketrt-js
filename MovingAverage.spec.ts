@@ -1,6 +1,6 @@
-import { MovingAverage } from './BandwidthEstimator';
+import { MovingAverage } from './MovingAverage';
 
-describe("BandwidthEstimator", () => {
+describe("MovingAverage", () => {
 
   it("MovingAverage helper class works", () => {
     let ma = new MovingAverage(100, 3);

@@ -7,14 +7,9 @@ import { BinaryConverter } from './BinaryConverter';
  */
 export class ControlFrame {
   /**
-   * Operation Code: 0 = ACK, 1-15 = Send Data Frames (value = # of data frames), 16 = Ping
+   * Operation Code: 0 = unused, 1-15 = Send Data Frames (value = # of data frames), 16 = Ping, 17 = Pong
    */
   public opCode: number;
-
-  /**
-   * Number of frames (excluding ACKs) received since the last control frame
-   */
-  public ackCount: number;
 
   /**
    * Current estimated RTT, in milliseconds
@@ -22,7 +17,8 @@ export class ControlFrame {
   public rttEstimate: number;
 
   /**
-   * Current estimated throughput, in bytes/sec
+   * Current estimated throughput, in bytes/sec. Measured in the direction from the computer receiving the control
+   * frame to the computer sending the control frame.
    */
   public throughputEstimate: number;
 
@@ -37,7 +33,6 @@ export class ControlFrame {
   public read(frame: DataView): void {
     let opCode = frame.getUint8(0);
     this.opCode = opCode;
-    this.ackCount = frame.getUint8(1);
     this.rttEstimate = frame.getUint16(2, false);
     this.throughputEstimate = frame.getInt32(4, false);
 
@@ -56,7 +51,6 @@ export class ControlFrame {
 
     let frame = new Uint8Array(ControlFrame.maxLength);
     frame[0] = this.opCode;
-    frame[1] = this.ackCount;
     BinaryConverter.writeUInt16(frame, 2, this.rttEstimate);
     BinaryConverter.writeInt32(frame, 4, this.throughputEstimate);
 

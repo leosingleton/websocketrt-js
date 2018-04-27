@@ -1,4 +1,4 @@
-import { BandwidthEstimator } from './MovingAverage';
+import { MovingAverage } from './MovingAverage';
 import { ControlFrame, DataFrameControl } from './ControlFrame';
 import { AsyncAutoResetEvent } from './coordination/AsyncAutoResetEvent';
 import { AsyncManualResetEvent } from './coordination/AsyncManualResetEvent';
@@ -18,7 +18,13 @@ export class Connection {
     this._config = config ? config : new TransportConfig(); // Use defaults if null
     this._connectionName = connectionName;
 
-    this._bandwidthEstimator = new BandwidthEstimator(this._config);
+    this._localRttEstimate = new MovingAverage(100, this._config.bandwidthEstimatorSamples);
+    this._remoteRttEstimate = 100;
+
+    this._inboundThroughputEstimate = new MovingAverage(128 * 1024, this._config.bandwidthEstimatorSamples);
+    this._outboundThroughputEstimate = 128 * 1024;
+
+    this._pongEvent = new AsyncAutoResetEvent();
 
     this._isClosing = new AsyncManualResetEvent();
 
@@ -29,9 +35,6 @@ export class Connection {
     this._dispatchEvent = new AsyncAutoResetEvent();
 
     this._sendQueue = new SendQueue(this._config.priorityLevels);
-
-    this._ackCount = 0;
-    this._acksReadyEvent = new AsyncAutoResetEvent();
 
     this._sendMessageNumbers = new Queue<number>();
     for (let n = 0; n < this._config.maxConcurrentMessages; n++) {
@@ -78,6 +81,12 @@ export class Connection {
     // in this FIFO queue.
     let expectedDataFrames = new Queue<DataFrameControl>();
 
+    // Timer used to estimate inbound throughput
+    let receiveTimer: number;
+
+    // Byte counter used to estimate inbound throughput
+    let bytesReceived: number;
+
     while (true) {
       // Determine the next expected frame and where the data should be stored
       let expectedDataFrame: DataFrameControl;
@@ -107,8 +116,16 @@ export class Connection {
         // Process a data frame
         //
 
-        // Always acknowledge data frames
-        this._sendAck();
+        // Estimate inbound throughput
+        bytesReceived += bytes;
+        if (expectedDataFrames.getCount() === 0) {
+          // This was the last data frame in the group of frames. Calculate the estimate.
+          let elapsedMilliseconds = Date.now() - receiveTimer;
+          if (bytesReceived > this._config.singlePacketMtu) {
+            let estimate = bytesReceived * 1000 / elapsedMilliseconds;
+            this._inboundThroughputEstimate.record(estimate);
+          }
+        }
 
         if (expectedDataFrame.isLast) {
           // We received an entire message. Send it to the dispatch loop. We don't want to process it on this
@@ -129,22 +146,14 @@ export class Connection {
         let controlFrame = new ControlFrame();
         controlFrame.read(segment);
 
-        // Acknowledge all control frames, except for ACKs
-        if (controlFrame.opCode !== 0) {
-          this._sendAck();
-        }
-
-        // If the control frame contained ACKs, give them to the bandwidth estimator
-        if (controlFrame.ackCount > 0) {
-          this._bandwidthEstimator.recordAcks(controlFrame.ackCount);
-        }
-
-        // Update the estimates of the inbound connection
-        this._bandwidthEstimator.recordInboundRtt(controlFrame.rttEstimate);
-        this._inboundThroughputEstimate = controlFrame.throughputEstimate;
-
         // Prepare for subsequent data frames
         if (controlFrame.opCode >= 1 && controlFrame.opCode <= 15) {
+          // Start the timer to measure how long it takes to receive the data. We know the remote side sends all of the
+          // data frames immediately following the control frame, so this provides an accurate estimate of inbound
+          // throughput.
+          receiveTimer = Date.now();
+          bytesReceived = 0;
+
           for (let n = 0; n < controlFrame.opCode; n++) {
             let dataFrame = controlFrame.dataFrames[n];
 
@@ -157,6 +166,24 @@ export class Connection {
             expectedDataFrames.enqueue(dataFrame);
           }
         }
+
+        if (controlFrame.opCode === 16) {
+          // Received a Ping. Send a Pong.
+          this._sendPong = true;
+          this._pongEvent.set();
+        }
+
+        if (controlFrame.opCode === 17) {
+          // Received a Pong. Use this to update our RTT estimate.
+          let timer = this._pingResponseTimer; this._pingResponseTimer = null;
+          if (timer) {
+            this._localRttEstimate.record(Date.now() - timer);
+          }
+        }
+
+        // All control frames include the RTT and throughput estimates from the remote side
+        this._remoteRttEstimate = controlFrame.rttEstimate;
+        this._outboundThroughputEstimate = controlFrame.throughputEstimate;
       }
     }
   }
@@ -201,11 +228,6 @@ export class Connection {
     this._sendQueue.enqueue(messageOut, priority);
   }
 
-  private _sendAck(): void {
-    this._ackCount++;
-    this._acksReadyEvent.set();
-  }
-
   private async _sendLoop(): Promise<void> {
     // dataFrames contains the control data for the outgoing frames we will send
     let dataFrames = new Queue<DataFrameControl>();
@@ -221,7 +243,7 @@ export class Connection {
     while (!this._isClosing.getIsSet()) {
       if (resetBytesRemainingEvent.getIsSet()) {
         // Calculate how many bytes we can send this iteration. Round up to the nearest multiple of an MTU.
-        bytesRemaining = this._bandwidthEstimator.getThroughputEstimate() * this._config.maxPercentThroughput
+        bytesRemaining = this._outboundThroughputEstimate * this._config.maxPercentThroughput
           this._config.targetResponsiveness / 10000;
         bytesRemaining = Math.floor((bytesRemaining / this._config.singlePacketMtu) + 1) *
           this._config.singlePacketMtu;
@@ -257,40 +279,28 @@ export class Connection {
         bytesRemaining -= frameLength;
       }
 
-      // Get the number of ACKs to send
-      let ackCount = this._ackCount; this._ackCount = 0;
-
-      // A single control frame can only send 255 ACKs. If somehow we exceed this, send multiple control
-      // frames.
-      while (ackCount > 255) {
-        // Build an ACK control frame
+      while (this._sendPong) {
+        // Build a pong control frame
         let controlFrame = new ControlFrame();
-        controlFrame.opCode = 0; // ACK
-        controlFrame.ackCount = 255;
-        controlFrame.rttEstimate = this._bandwidthEstimator.getRttEstimate();
-        controlFrame.throughputEstimate = this._bandwidthEstimator.getThroughputEstimate();
+        controlFrame.opCode = 17; // Pong
+        controlFrame.rttEstimate = this._localRttEstimate.getValue();
+        controlFrame.throughputEstimate = this._inboundThroughputEstimate.getValue();
         let controlFrameBytes = controlFrame.write();
 
-        // Send the ACK frame
+        // Send the pong control frame
         this._socket.sendFrameAsync(controlFrameBytes);
-        ackCount -= 255;
+        this._sendPong = false;
       }
 
-      // If we have either ACKs or data to send, send it
-      if (ackCount > 0 || dataFrames.getCount() > 0) {
+      // If we have data to send, send it
+      if (dataFrames.getCount() > 0) {
         // Build a control frame
         let controlFrame = new ControlFrame();
         controlFrame.opCode = dataFrames.getCount();
-        controlFrame.ackCount = ackCount;
-        controlFrame.rttEstimate = this._bandwidthEstimator.getRttEstimate();
-        controlFrame.throughputEstimate = this._bandwidthEstimator.getThroughputEstimate();
+        controlFrame.rttEstimate = this._localRttEstimate.getValue();
+        controlFrame.throughputEstimate = this._inboundThroughputEstimate.getValue();
         controlFrame.dataFrames = dataFrames.toArray();
         let controlFrameBytes = controlFrame.write();
-
-        if (dataFrames.getCount() > 0) {
-          // Inform the bandwidth estimator to expect an ACK
-          this._bandwidthEstimator.expectAck(controlFrameBytes.byteLength);
-        }
 
         // Send the control frame
         this._socket.sendFrameAsync(controlFrameBytes);
@@ -298,9 +308,6 @@ export class Connection {
         // Send the data frames
         while (dataFrames.getCount() > 0) {
           let dataFrame = dataFrames.dequeue();
-
-          // Inform the bandwidth estimator to expect an ACK
-          this._bandwidthEstimator.expectAck(dataFrame.frameLength);
 
           // If this is the last frame of a message, we can return the message number to the queue for
           // reuse by another message
@@ -312,37 +319,34 @@ export class Connection {
           // Send the actual data
           this._socket.sendFrameAsync(new DataView(dataFrame.payload.buffer, dataFrame.offset, dataFrame.frameLength));
         }
-
-        // Reset the ping timer
-        pingEvent = new AsyncTimerEvent(this._config.minimumFrameInterval);
-      } else if (pingEvent.getIsSet()) {
-        // There was no outgoing frames to send, and the MinimumFrameInterval has elapsed. Send a ping.
+      }
+      
+      if (pingEvent.getIsSet()) {
         let controlFrame = new ControlFrame();
         controlFrame.opCode = 16; // Ping
-        controlFrame.ackCount = 0;
-        controlFrame.rttEstimate = this._bandwidthEstimator.getRttEstimate();
-        controlFrame.throughputEstimate = this._bandwidthEstimator.getThroughputEstimate();
+        controlFrame.rttEstimate = this._localRttEstimate.getValue();
+        controlFrame.throughputEstimate = this._inboundThroughputEstimate.getValue();
         let controlFrameBytes = controlFrame.write();
-
-        // Inform the bandwidth estimator to expect an ACK
-        this._bandwidthEstimator.expectAck(controlFrameBytes.byteLength);
 
         // Send the Ping frame
         this._socket.sendFrameAsync(controlFrameBytes);
 
+        // Measure the amount of time until we receive a Pong
+        let timer = Date.now();
+        this._pingResponseTimer = timer;
+
         // Reset the ping timer
-        pingEvent = new AsyncTimerEvent(this._config.minimumFrameInterval);
+        pingEvent = new AsyncTimerEvent(this._config.pingInterval);
       }
 
       if (bytesRemaining > 0) {
-        // Block until there are new messages, pings, or ACKs to send
-        await AsyncEventWaitHandle.whenAny([this._sendQueue.notEmptyEvent, pingEvent, this._acksReadyEvent,
+        // Block until there are new messages, pings, or pongs to send
+        await AsyncEventWaitHandle.whenAny([this._sendQueue.notEmptyEvent, pingEvent, this._pongEvent,
           this._isClosing]);
       } else {
         // We are throttling output. Block until our bytesRemaining counter resets, or until there are
-        // ACKs. ACKs are not throttled. No need to wait for pingTask, is it is much longer than the
-        // bytesRemaining reset interval.
-        await AsyncEventWaitHandle.whenAny([resetBytesRemainingEvent, this._acksReadyEvent, this._isClosing]);
+        // pongs to send. No need to wait for pingTask, is it is much longer than the bytesRemaining reset interval.
+        await AsyncEventWaitHandle.whenAny([resetBytesRemainingEvent, this._pongEvent, this._isClosing]);
       }
     }
   }
@@ -351,30 +355,45 @@ export class Connection {
    * Estimated Round-Trip Time, in milliseconds
    */
   public getRttEstimate(): number {
-    return this._bandwidthEstimator.getRttEstimate();
+    // RTT is always the same in each direction. For a more accurate measurement, both sides independently calculate
+    // the RTT value and share their result. For the actual RTT estimate, we average the two values.
+    return (this._localRttEstimate.getValue() + this._remoteRttEstimate) / 2;
   }
+
+  /**
+   * Estimate RTT calculated by ourselves
+   */
+  private _localRttEstimate: MovingAverage;
+
+  /**
+   * Estimated RTT calculated by the other side
+   */
+  private _remoteRttEstimate: number;
 
   /**
    * Estimated throughput of the outbound connection, in bytes/sec
    */
   public getOutboundThroughputEstimate(): number {
-    return this._bandwidthEstimator.getThroughputEstimate();
+    return this._outboundThroughputEstimate;
   }
-
-  /**
-   * Number of bytes sent over the WebSocket without an acknowledgement
-   */
-  public getOutboundUnacknowledgedBytes(): number {
-    return this._bandwidthEstimator.getDataInFlight();
-  }
+  private _outboundThroughputEstimate: number;
 
   /**
    * Estimated throughput of the inbound connection, in bytes/sec
    */
   public getInboundThroughputEstimate(): number {
-    return this._inboundThroughputEstimate;
+    return this._inboundThroughputEstimate.getValue();
   }
-  private _inboundThroughputEstimate: number;
+
+  /**
+   * Moving average used to calculate the inbound throughput estimate
+   */
+  private _inboundThroughputEstimate: MovingAverage;
+
+  /**
+   * Measures the interval between sending a Ping and receiving a Pong. This is used to calculate RTT.
+   */
+  private _pingResponseTimer: number;
 
   /**
    * Name string for debugging
@@ -385,11 +404,6 @@ export class Connection {
   private _onMessageReceived: (message: Message) => Promise<void>;
   private _config: TransportConfig;
   private _tasks: Promise<void>[];
-
-  /**
-   * Estimates throughput and round-trip time (RTT) of the outbound connection
-   */
-  private _bandwidthEstimator: BandwidthEstimator;
 
   /**
    * Event used to signal when the connection is closing
@@ -411,14 +425,14 @@ export class Connection {
   private _sendQueue: SendQueue;
 
   /**
-   * Number of ACKs to send
+   * Set whenever we need to send a Pong in response to a Ping
    */
-  private _ackCount: number;
+  private _sendPong: boolean;
 
   /**
-   * Set whenever we have outgoing ACKs to send
+   * Set whenever we need to send a Pong in response to a Ping
    */
-  private _acksReadyEvent: AsyncAutoResetEvent;
+  private _pongEvent: AsyncAutoResetEvent;
 
   /**
    * We limit the number of concurrent messages over the transport. At most, we allow 16 due to the 4-bit field

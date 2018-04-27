@@ -34,10 +34,9 @@ export class TransportConfig {
   public bandwidthEstimatorSamples = 100;
 
   /**
-   * Minimum interval, in milliseconds, that an outbound frame must be sent. If the WebSocket goes idle for this
-   * period of time, a ping frame is sent to keep the connection alive.
+   * Interval between pings, in milliseconds.
    */
-  public minimumFrameInterval = 60000;
+  public pingInterval = 60000;
 
   /**
    * To avoid hitting TCP congestion control which will cause our throughput to vary wildly, we cap outgoing
