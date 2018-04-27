@@ -244,7 +244,7 @@ export class Connection {
       if (resetBytesRemainingEvent.getIsSet()) {
         // Calculate how many bytes we can send this iteration. Round up to the nearest multiple of an MTU.
         bytesRemaining = this._outboundThroughputEstimate * this._config.maxPercentThroughput
-          this._config.targetResponsiveness / 10000;
+          this._config.targetResponsiveness / 100000;
         bytesRemaining = Math.floor((bytesRemaining / this._config.singlePacketMtu) + 1) *
           this._config.singlePacketMtu;
         resetBytesRemainingEvent = new AsyncTimerEvent(this._config.targetResponsiveness);
