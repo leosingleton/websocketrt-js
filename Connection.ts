@@ -121,7 +121,7 @@ export class Connection {
         if (expectedDataFrames.getCount() === 0) {
           // This was the last data frame in the group of frames. Calculate the estimate.
           let elapsedMilliseconds = Date.now() - receiveTimer;
-          if (bytesReceived > this._config.singlePacketMtu) {
+          if (bytesReceived > this._config.singlePacketMtu && elapsedMilliseconds > 0) {
             let estimate = bytesReceived * 1000 / elapsedMilliseconds;
             this._inboundThroughputEstimate.record(estimate);
           }
