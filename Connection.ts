@@ -366,9 +366,10 @@ export class Connection {
    * Estimated Round-Trip Time, in milliseconds
    */
   public getRttEstimate(): number {
-    // RTT is always the same in each direction. For a more accurate measurement, both sides independently calculate
-    // the RTT value and share their result. For the actual RTT estimate, we average the two values.
-    return (this._localRttEstimate.getValue() + this._remoteRttEstimate) / 2;
+    // RTT should always the same in each direction, but is sometimes inaccurate due to server and network load adding
+    // additional latency. For a more accurate measurement, both sides independently calculate the RTT value and share
+    // their result. For the actual RTT estimate, we take the lower of the two.
+    return Math.min(this._localRttEstimate.getValue(), this._remoteRttEstimate);
   }
 
   /**
