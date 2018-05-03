@@ -179,6 +179,8 @@ export class Connection {
           if (timer) {
             this._localRttEstimate.record(Date.now() - timer);
           }
+
+          this._missedPingCount = 0;
         }
 
         // All control frames include the RTT and throughput estimates from the remote side
@@ -266,6 +268,14 @@ export class Connection {
           let timer = Date.now();
           this._pingResponseTimer = timer;
           this._pingCount++;
+        } else {
+          this._missedPingCount++;
+
+          if (this._missedPingCount >= this._config.missedPingCount) {
+            // The remote side is not responding to pings. Close the connection.
+            this.forceClose('Remote side did not respond to a ping');
+            return;
+          }
         }
 
         // Calculate the ping interval
@@ -411,6 +421,12 @@ export class Connection {
    * Number of pings sent
    */
   private _pingCount = 0;
+
+  /**
+   * Number of consecutive pings that were not sent, because the previous was still waiting for a pong response.
+   * If this hits TransportConfig.missedPingCount, the connection is closed.
+   */
+  private _missedPingCount = 0;
 
   /**
    * Name string for debugging

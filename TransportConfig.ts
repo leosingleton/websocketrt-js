@@ -44,6 +44,14 @@ export class TransportConfig {
   public initialPingInterval = 1000;
 
   /**
+   * Number of consecutive ping intervals that can be missed (because the remote side didn't repond with a pong),
+   * before the connection is closed.
+   * 
+   * Effectively, the connection has a timeout of pingInterval * missedPingCount = 60 seconds.
+   */
+  public missedPingCount = 6;
+
+  /**
    * To avoid hitting TCP congestion control which will cause our throughput to vary wildly, we cap outgoing
    * data below the calculated maximum. This value controls the percent from 0 to 100.
    */
