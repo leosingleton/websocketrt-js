@@ -286,7 +286,7 @@ export class Connection {
         }
 
         // Randomize the interval by +/- 50%
-        let randomizedInterval = interval + (interval / 2) + (Math.random() * interval);
+        let randomizedInterval = interval + (interval / 2) - (Math.random() * interval);
 
         // Reset the ping timer
         pingEvent = new AsyncTimerEvent(randomizedInterval);
