@@ -5,12 +5,6 @@ import { Connection } from './Connection';
 
 describe("Connection", () => {
 
-  let originalTimeout: number;
-  beforeEach(function() {
-    originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 15000;
-  });
-
   it("Runs a basic simulator to execute the transport code in a unit test environment", async () => {
     let sim = new FramedSocketSimulator(250, 256 * 1024);
 
@@ -67,10 +61,23 @@ describe("Connection", () => {
     // Wait for the connections to close
     await c1.waitClose();
     await c2.waitClose();
-  });
+  }, 15000);
 
-  afterEach(function() {
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
-  });
+  it("Simulates a dropped connection and ensures both sides detect it via pings and close gracefully", async () => {
+    let sim = new FramedSocketSimulator(250, 256 * 1024);
+    sim.dropMessages = true; // Drop all messages to simulate a dropped WebSocket
+
+    let onMessageReceived = async (msg: Message) => {
+      expect(true).toBeFalsy('This callback should not be invoked during this test case');
+    };
+
+    let c1 = new Connection(sim.getSocket1(), onMessageReceived, null, 'Connection1');
+    let c2 = new Connection(sim.getSocket2(), onMessageReceived, null, 'Connection2');
+
+    // The connections should detect the dead WebSocket and automatically close. This should takes 4 pings of
+    // 5 seconds each, for a total of 20 seconds. The test case has an extra 10 seconds before it times out.
+    await c1.waitClose();
+    await c2.waitClose();
+  }, 30000);
 
 });

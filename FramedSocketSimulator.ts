@@ -31,6 +31,12 @@ export class FramedSocketSimulator {
   }
   private _socket2: IFramedSocket;
 
+  /** Whether the simulator should drop all incoming and outgoing messages to simulate a lost connection */
+  public dropMessages: boolean;
+
+  /** When closed, indicates whether the WebSocket was closed gracefully using waitForRemote */
+  private _gracefulClose: boolean;
+
   private _socket1ToSocket2 = new SimQueue();
   private _socket2ToSocket1 = new SimQueue();
 
@@ -39,12 +45,15 @@ export class FramedSocketSimulator {
   }
   private _isClosed: AsyncManualResetEvent;
 
-  public close(): void {
-    this._isClosed.set();
+  public close(waitForRemote: boolean): void {
+    if (!this._isClosed.getIsSet()) {
+      this._isClosed.set();
+      this._gracefulClose = waitForRemote;
 
-    // Wake any receivers so they return a closing error code
-    this._socket1ToSocket2.event.set();
-    this._socket2ToSocket1.event.set();
+      // Wake any receivers so they return a closing error code
+      this._socket1ToSocket2.event.set();
+      this._socket2ToSocket1.event.set();
+    }
   }
 
   /**
@@ -140,6 +149,11 @@ class SocketSim implements IFramedSocket {
   }
 
   public async sendFrameAsync(buffer: DataView): Promise<void> {
+    if (this._sim.dropMessages || this._sim.getIsClosed().getIsSet()) {
+      // Simulate a connection failure or closed socket by dropping all messages
+      return;
+    }
+
     let frame = new SimFrame();
     frame.payload = new Uint8Array(buffer.buffer);
     frame.deliveryTime = Date.now() + this._latency;
@@ -149,7 +163,7 @@ class SocketSim implements IFramedSocket {
   }
 
   public async closeAsync(closeReason: string, waitForRemote: boolean): Promise<void> {
-    this._sim.close();
+    this._sim.close(waitForRemote);
   }
 }
 

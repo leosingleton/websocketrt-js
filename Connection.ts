@@ -43,23 +43,24 @@ export class Connection {
     this._messageNumberEvent = new AsyncAutoResetEvent();
 
     // Start the worker threads
-    this._tasks = [];
-    this._tasks[0] = this._receiveLoop();
-    this._tasks[1] = this._dispatchLoop();
-    this._tasks[2] = this._sendLoop();
+    this._loopExceptionWrapper(this._receiveLoop());
+    this._loopExceptionWrapper(this._dispatchLoop());
+    this._loopExceptionWrapper(this._sendLoop());
   }
 
   /**
    * Closes the connection
    * @param reason String describing the reason for closing
+   * @param waitForRemote If true, we block while the socket is closed gracefully
    */
-  public forceClose(reason: string): void {
+  public forceClose(reason: string, waitForRemote = false): void {
     // Ignore multiple calls to this function
     if (!this._closeReason) {
       this._closeReason = reason;
-      this._isClosing.set();
 
-      this._socket.closeAsync(reason, true);
+      this._socket.closeAsync(reason, waitForRemote);
+
+      this._isClosing.set();
     }
   }
 
@@ -68,12 +69,22 @@ export class Connection {
    * @returns String describing the reason for closing
    */
   public async waitClose(): Promise<string> {
-    // A forEach loop doesn't properly await async tasks. Use a traditional for loop to avoid this.
-    for (let n = 0; n < this._tasks.length; n++) {
-      await this._tasks[n];
-    }
-
+    // We used to actually wait on the RecieveLoop, SendLoop, and DispatchLoop tasks here, however .NET's
+    // WebSocket client seems to be unpredictable when it comes to timing. Instead we solely rely on our own
+    // event and let the tasks clean up whenever they finish. TypeScript will do the same for consistency.
+    await this._isClosing.waitAsync();
     return this._closeReason;
+  }
+
+  /**
+   * Wrapper around an async worker loop to catch any unhandled exceptions, log them, and terminate the connection
+   * @param promise Promise returned by an async loop 
+   */
+  private _loopExceptionWrapper(promise: Promise<void>): void {
+    promise.catch((err: Error) => {
+      console.log(err);
+      this.forceClose(err.name);
+    });
   }
 
   private async _receiveLoop(): Promise<void> {
@@ -436,7 +447,6 @@ export class Connection {
   private _socket: IFramedSocket;
   private _onMessageReceived: (message: Message) => Promise<void>;
   private _config: TransportConfig;
-  private _tasks: Promise<void>[];
 
   /**
    * Event used to signal when the connection is closing
