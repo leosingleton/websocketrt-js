@@ -57,7 +57,7 @@ export class WSFramedSocket implements IFramedSocket {
 
     // The WebSocket must be open before calling this constructor
     if (this._ws.readyState !== WS_OPEN) {
-      throw 'Failed to established WebSocket. State=' + this._ws.readyState;
+      throw new Error('Failed to establish WebSocket. State=' + this._ws.readyState);
     }
   }
 

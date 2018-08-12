@@ -216,7 +216,7 @@ export class Connection {
 
   public async send(message: Message, priority: number): Promise<void> {
     if (priority >= this._config.priorityLevels) {
-      throw 'Exceeded max priority';
+      throw new Error('Priority ' + priority + 'exceeds max');
     }
 
     if (this._isClosing.getIsSet()) {
