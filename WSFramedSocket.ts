@@ -1,6 +1,4 @@
-import { AsyncAutoResetEvent } from './coordination/AsyncAutoResetEvent';
-import { AsyncEventWaitHandle } from './coordination/AsyncEventWaitHandle';
-import { AsyncManualResetEvent } from './coordination/AsyncManualResetEvent';
+import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncManualResetEvent } from '../common/coordination';
 import { Connection } from './Connection';
 import { FramedSocketError, IFramedSocket } from './IFramedSocket';
 import { Message } from './Message';

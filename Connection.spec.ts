@@ -1,6 +1,6 @@
 import { FramedSocketSimulator } from './FramedSocketSimulator';
 import { Message } from './Message';
-import { AsyncTimerEvent } from './coordination/AsyncTimerEvent';
+import { AsyncTimerEvent } from '../common/coordination';
 import { Connection } from './Connection';
 
 describe("Connection", () => {

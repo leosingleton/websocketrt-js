@@ -1,14 +1,12 @@
 import { MovingAverage } from './MovingAverage';
 import { ControlFrame, DataFrameControl } from './ControlFrame';
-import { AsyncAutoResetEvent } from './coordination/AsyncAutoResetEvent';
-import { AsyncManualResetEvent } from './coordination/AsyncManualResetEvent';
-import { AsyncTimerEvent } from './coordination/AsyncTimerEvent';
+import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncManualResetEvent, AsyncTimerEvent } from
+  '../common/coordination';
 import { IFramedSocket } from './IFramedSocket';
 import { Message } from './Message';
 import { Queue } from './Queue';
 import { SendQueue, OutgoingMessage } from './SendQueue';
 import { TransportConfig } from './TransportConfig';
-import { AsyncEventWaitHandle } from './coordination/AsyncEventWaitHandle';
 
 export class Connection {
   public constructor(socket: IFramedSocket, onMessageReceived: (message: Message) => Promise<void>,

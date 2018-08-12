@@ -1,4 +1,4 @@
-import { AsyncAutoResetEvent } from './coordination/AsyncAutoResetEvent';
+import { AsyncAutoResetEvent } from '../common/coordination';
 import { Message } from './Message';
 import { Queue } from './Queue';
 

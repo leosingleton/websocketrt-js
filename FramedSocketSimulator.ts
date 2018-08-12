@@ -2,10 +2,8 @@ import { BinaryConverter } from './BinaryConverter';
 import { IFramedSocket, FramedSocketError } from './IFramedSocket';
 import { Message } from './Message';
 import { Queue } from './Queue';
-import { AsyncAutoResetEvent } from './coordination/AsyncAutoResetEvent';
-import { AsyncManualResetEvent } from './coordination/AsyncManualResetEvent';
-import { AsyncTimerEvent } from './coordination/AsyncTimerEvent';
-import { AsyncEventWaitHandle } from './coordination/AsyncEventWaitHandle';
+import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncManualResetEvent, AsyncTimerEvent } from
+  '../common/coordination';
 
 /** Simulates a WebSocket with latency for unit testing */
 export class FramedSocketSimulator {
