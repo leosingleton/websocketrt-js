@@ -9,9 +9,10 @@ describe("BinaryConverter", () => {
     let value1 = BinaryConverter.readUInt64(buffer, 1);
     expect(value1).toEqual(0);
 
-    BinaryConverter.writeUInt64(buffer, 1, 0xffffffffffffffff);
+    // JavaScript can't handle the largest unsigned 64-bit number, so go as high as it will
+    BinaryConverter.writeUInt64(buffer, 1, Number.MAX_SAFE_INTEGER);
     let value2 = BinaryConverter.readUInt64(buffer, 1);
-    expect(value2).toEqual(0xffffffffffffffff);
+    expect(value2).toEqual(Number.MAX_SAFE_INTEGER);
   });
   
   it("Int32", () => {
