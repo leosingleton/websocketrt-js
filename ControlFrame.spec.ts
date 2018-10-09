@@ -1,10 +1,34 @@
-import { ControlFrame, DataFrameControl } from "./ControlFrame";
+import { ControlFrame, DataFrameControl, MessageCancelControl } from './ControlFrame';
+import { TransportCapabilities, TransportCapabilities1 } from './TransportCapabilities';
 
 describe("ControlFrame", () => {
 
-  it("Ensures a control frame respresenting an ACK can be serialized and deserialized", () => {
+  it("Ensures a control frame respresenting capabilities (OpCode=0x00) can be serialized and deserialized", () => {
     let frame1 = new ControlFrame();
-    frame1.opCode = 0;
+    frame1.opCode = 0x00;
+    frame1.rttEstimate = 42;
+    frame1.throughputEstimate = 12345678;
+    frame1.data = new TransportCapabilities();
+    frame1.data.majorVersion = 3;
+    frame1.data.minorVersion = 5;
+    frame1.data.capabilities1 = TransportCapabilities1.Capabilities | TransportCapabilities1.Capabilities2;
+    let bytes = frame1.write();
+
+    let frame2 = new ControlFrame();
+    frame2.read(bytes);
+    expect(frame1.opCode).toEqual(frame2.opCode);
+    expect(frame1.rttEstimate).toEqual(frame2.rttEstimate);
+    expect(frame1.throughputEstimate).toEqual(frame2.throughputEstimate);
+    let data1 = frame1.data;
+    let data2 = frame2.data as TransportCapabilities;
+    expect(data1.majorVersion).toEqual(data2.majorVersion);
+    expect(data1.minorVersion).toEqual(data2.minorVersion);
+    expect(data1.capabilities1).toEqual(data2.capabilities1);
+  });
+
+  it("Ensures a control frame respresenting a ping can be serialized and deserialized", () => {
+    let frame1 = new ControlFrame();
+    frame1.opCode = 0x10;
     frame1.rttEstimate = 42;
     frame1.throughputEstimate = 12345678;
     let bytes = frame1.write();
@@ -12,36 +36,53 @@ describe("ControlFrame", () => {
     let frame2 = new ControlFrame();
     frame2.read(bytes);
     expect(frame1.opCode).toEqual(frame2.opCode);
-    expect(frame1.dataFrames).toEqual(frame2.dataFrames);
     expect(frame1.rttEstimate).toEqual(frame2.rttEstimate);
     expect(frame1.throughputEstimate).toEqual(frame2.throughputEstimate);
+    expect(frame1.data).toEqual(frame2.data);
   });
 
   it("Ensures a control frame preceding data frames can be serialized", () => {
     let frame1 = new ControlFrame();
-    frame1.opCode = 2;
+    frame1.opCode = 0x02;
     frame1.rttEstimate = 4096;
     frame1.throughputEstimate = 123456789;
-    frame1.dataFrames = [new DataFrameControl(), new DataFrameControl()];
-    frame1.dataFrames[0].messageNumber = 4;
-    frame1.dataFrames[0].offset = 0;
-    frame1.dataFrames[0].length = 15000;
-    frame1.dataFrames[0].isFirst = true;
-    frame1.dataFrames[0].isLast = false;
-    frame1.dataFrames[0].header = new Uint8Array([1, 2, 3, 4, 5, 6, 7]);
-    frame1.dataFrames[1].messageNumber = 15;
-    frame1.dataFrames[1].offset = 19000000;
-    frame1.dataFrames[1].length = 20000000;
-    frame1.dataFrames[1].isFirst = false;
-    frame1.dataFrames[1].isLast = true;
+    frame1.data = [new DataFrameControl(), new DataFrameControl()];
+    frame1.data[0].messageNumber = 4;
+    frame1.data[0].offset = 0;
+    frame1.data[0].length = 15000;
+    frame1.data[0].isFirst = true;
+    frame1.data[0].isLast = false;
+    frame1.data[0].header = new Uint8Array([1, 2, 3, 4, 5, 6, 7]);
+    frame1.data[1].messageNumber = 15;
+    frame1.data[1].offset = 19000000;
+    frame1.data[1].length = 20000000;
+    frame1.data[1].isFirst = false;
+    frame1.data[1].isLast = true;
     let bytes = frame1.write();
 
     let frame2 = new ControlFrame();
     frame2.read(bytes);
     expect(frame1.opCode).toEqual(frame2.opCode);
-    expect(frame1.dataFrames).toEqual(frame2.dataFrames);
     expect(frame1.rttEstimate).toEqual(frame2.rttEstimate);
     expect(frame1.throughputEstimate).toEqual(frame2.throughputEstimate);
+    expect(frame1.data).toEqual(frame2.data as DataFrameControl[]);
+  });
+
+  it("Ensures a control frame respresenting a cancel (OpCode=0x12) can be serialized and deserialized", () => {
+    let frame1 = new ControlFrame();
+    frame1.opCode = 0x12;
+    frame1.rttEstimate = 4096;
+    frame1.throughputEstimate = 123456789;
+    frame1.data = new MessageCancelControl();
+    frame1.data.messageNumbers = 42;
+    let bytes = frame1.write();
+
+    let frame2 = new ControlFrame();
+    frame2.read(bytes);
+    expect(frame1.opCode).toEqual(frame2.opCode);
+    expect(frame1.rttEstimate).toEqual(frame2.rttEstimate);
+    expect(frame1.throughputEstimate).toEqual(frame2.throughputEstimate);
+    expect(frame1.data).toEqual(frame2.data as MessageCancelControl);
   });
 
 });

@@ -1,6 +1,6 @@
 import { AsyncAutoResetEvent } from '../common/coordination';
-import { Message } from './Message';
 import { Queue } from './Queue';
+import { OutgoingMessage } from './OutgoingMessage';
 
 /**
  * Priority queue used to store outgoing messages
@@ -8,11 +8,10 @@ import { Queue } from './Queue';
 export class SendQueue {
   public constructor(priorityLevels: number) {
     this._messageQueues = new Array<Queue<OutgoingMessage>>(priorityLevels);
-    this._highestPriority = 0;
-    this.notEmptyEvent = new AsyncAutoResetEvent();
   }
 
-  public enqueue(message: OutgoingMessage, priority: number): void {
+  public enqueue(message: OutgoingMessage): void {
+    let priority = message.priority;
     let queue = this._messageQueues[priority];
     if (!queue) {
       queue = new Queue<OutgoingMessage>();
@@ -20,10 +19,6 @@ export class SendQueue {
     }
 
     queue.enqueue(message);
-
-    this._highestPriority = Math.min(this._highestPriority, priority);
-
-    this.notEmptyEvent.set();
   }
 
   /**
@@ -31,39 +26,82 @@ export class SendQueue {
    * @param maxBytes Maximum bytes the transport layer can send. If the next message is less than or equal to this
    *    number of bytes, it is removed from the queue. Otherwise, it remains at the head.
    * @returns message Returns the next outgoing message or null if none remain
-   * @returns sendRemaining True if the message has been removed from the queue. False if the message is larger than
-   *    maxBytes or no messages remain.
+   * @returns bytesToSend Number of bytes to send. This may be less than the maxBytes parameter supplied if the highest priority message has less available payload. Returns 0 if there are no messages to send.
    */
-  public getNext(maxBytes: number): {message: OutgoingMessage, sendRemaining: boolean} {
-    while (this._highestPriority < this._messageQueues.length) {
-      let queue = this._messageQueues[this._highestPriority];
+  public getNext(maxBytes: number): {message: OutgoingMessage, bytesToSend: number} {
+    let priority = this._highestPriority;
+
+    while (priority < this._messageQueues.length) {
+      let queue = this._messageQueues[priority];
       if (queue) {
         let message: OutgoingMessage;
         if (message = queue.tryPeek()) {
-          if (message.getBytesRemaining() <= maxBytes) {
-            queue.dequeue();
-            return {
-              message: message,
-              sendRemaining: true
-            };
-          } else {
-            return {
-              message: message,
-              sendRemaining: false
+          let bytesReady = message.getBytesReady();
+          if (bytesReady > 0) {
+            // If this send completes the message, remove it from the queue
+            if (bytesReady === message.getBytesRemaining() && bytesReady <= maxBytes) {
+              queue.dequeue();
             }
+
+            return {
+              message: message,
+              bytesToSend: Math.min(bytesReady, maxBytes)
+            };
           }
+        } else {
+          // There are no more messages at this priority level
+          this._highestPriority++;
         }
       }
 
-      // No frames found at this priority level. Try the next.
-      this._highestPriority++;
+      // No messages with data ready at this priority level. Try the next.
+      priority++;
     }
 
     // No messages remaining
     return {
       message: null,
-      sendRemaining: false
+      bytesToSend: 0
     };
+  }
+
+  /**
+   * Removes a message from the send queue
+   * @param message Message to cancel
+   */
+  public cancel(message: OutgoingMessage): void {
+    let queue = this._messageQueues[message.priority];
+    if (queue) {
+      // This part is really ugly. Cancel() was completely an afterthought and the data structure
+      // wasn't designed to support it...
+      if (queue.getCount() === 1) {
+        let peek = queue.tryPeek();
+        if (message === peek) {
+          queue.dequeue();
+          return;
+        }
+      } else if (queue.getCount() > 1) {
+        let found = false;
+
+        let newQueue = new Queue<OutgoingMessage>();
+        while (queue.getCount() > 0) {
+          let peek = queue.dequeue();
+          if (message === peek) {
+            found = true;
+          } else {
+            newQueue.enqueue(peek);
+          }
+        }
+        this._messageQueues[message.priority] = newQueue;
+
+        if (found) {
+          return;
+        }
+      }
+    }
+
+    // Failed to cancel message
+    throw new Error('Failed to cancel ' + message.messageNumber + ' ' + message.priority);
   }
 
   /**
@@ -75,30 +113,5 @@ export class SendQueue {
   /**
    * Highest priority level that currently has a message queued
    */
-  private _highestPriority: number;
-
-  /**
-   * Set whenever the outgoing queue is not empty
-   */
-  public readonly notEmptyEvent: AsyncAutoResetEvent;
-}
-
-/** 
- * Holds a single message on the outgoing queue
- */
-export class OutgoingMessage {
-  constructor(messageNumber: number, message: Message) {
-    this.messageNumber = messageNumber;
-    this.message = message;
-  }
-
-  public messageNumber: number;
-
-  public message: Message;
-
-  public bytesSent = 0;
-
-  public getBytesRemaining(): number {
-    return this.message.payload.length - this.bytesSent;
-  }
+  private _highestPriority = 0;
 }

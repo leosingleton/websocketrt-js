@@ -1,4 +1,5 @@
 import { BinaryConverter } from './BinaryConverter';
+import { TransportCapabilities } from './TransportCapabilities';
 
 /** 
  * Frames sent over the WebSocket are either data frames containing payload or control frames, which are used for
@@ -7,7 +8,12 @@ import { BinaryConverter } from './BinaryConverter';
  */
 export class ControlFrame {
   /**
-   * Operation Code: 0 = unused, 1-15 = Send Data Frames (value = # of data frames), 16 = Ping, 17 = Pong
+   * Operation Code:
+   *  0x00 = Capabilities Negotiation
+   *  0x01 - 0x0f = Send Data Frames (value = # of data frames)
+   *  0x10 = Ping
+   *  0x11 = Pong
+   *  0x12 = Cancel Messages
    */
   public opCode: number;
 
@@ -23,10 +29,14 @@ export class ControlFrame {
   public throughputEstimate: number;
 
   /**
-   * If OpCode is 1-15, additional control information about the data frames is here. The payloads for these
-   * will be sent as separate frames immediately following the control frame.
+   * If OpCode is 0x00, the remainder of the control frame contains the capabilities of the transport library.
+   * 
+   * If OpCode is 0x01-0x0f, additional control information about the data frames is here. The payloads for
+   * these will be sent as separate frames immediately following the control frame.
+   * 
+   * If OpCode is 0x12, the remainder of the control frame contains details about which message numbers to.
    */
-  public dataFrames: DataFrameControl[];
+  public data: TransportCapabilities | DataFrameControl[] | MessageCancelControl;
 
   public constructor() {}
 
@@ -36,27 +46,40 @@ export class ControlFrame {
     this.rttEstimate = frame.getUint16(2, false);
     this.throughputEstimate = frame.getInt32(4, false);
 
-    if (opCode >= 1 && opCode <= 15) {
-      let offset = 8;
-      this.dataFrames = new Array<DataFrameControl>(opCode);
+    let offset = 8;
+    if (opCode === 0x00) {
+      this.data = new TransportCapabilities();
+      offset += this.data.read(new Uint8Array(frame.buffer), frame.byteOffset + offset);
+    } else if (opCode >= 0x01 && opCode <= 0x0f) {
+      this.data = new Array<DataFrameControl>(opCode);
       for (let n = 0; n < opCode; n++) {
-        this.dataFrames[n] = new DataFrameControl();
-        offset += this.dataFrames[n].read(new Uint8Array(frame.buffer), frame.byteOffset + offset);
+        this.data[n] = new DataFrameControl();
+        offset += this.data[n].read(new Uint8Array(frame.buffer), frame.byteOffset + offset);
       }
+    } else if (opCode === 0x12) {
+      this.data = new MessageCancelControl();
+      offset += this.data.read(new Uint8Array(frame.buffer), frame.byteOffset + offset);
     }
   }
 
   public write(): DataView {
-    let dataFrameCount = this.dataFrames ? this.dataFrames.length : 0;
-
     let frame = new Uint8Array(ControlFrame.maxLength);
     frame[0] = this.opCode;
     BinaryConverter.writeUInt16(frame, 2, this.rttEstimate);
     BinaryConverter.writeInt32(frame, 4, this.throughputEstimate);
 
     let offset = 8;
-    for (let n = 0; n < dataFrameCount; n++) {
-      offset += this.dataFrames[n].write(frame, offset);
+    if (this.opCode === 0x00) {
+      let data = this.data as TransportCapabilities;
+      offset += data.write(frame, offset);
+    } else if (this.opCode >= 0x01 && this.opCode <= 0x0f) {
+      let data = this.data as DataFrameControl[];
+      for (let n = 0; n < data.length; n++) {
+        offset += data[n].write(frame, offset);
+      }
+    } else if (this.opCode === 0x12) {
+      let data = this.data as MessageCancelControl;
+      offset += data.write(frame, offset);
     }
 
     return new DataView(frame.buffer, 0, offset);
@@ -161,5 +184,21 @@ export class DataFrameControl {
     BinaryConverter.writeInt32(frame, startIndex + 4, length);
 
     return headerLength + 8;
+  }
+}
+
+/** Additional details on the cancel OpCode (0x12) */
+export class MessageCancelControl {
+  /** Bitmask of message numbers to cancel */
+  public messageNumbers: number;
+
+  public read(frame: Uint8Array, startIndex: number): number {
+    this.messageNumbers = BinaryConverter.readUInt16(frame, startIndex);
+    return 2;
+  }
+
+  public write(frame: Uint8Array, startIndex: number): number {
+    BinaryConverter.writeUInt16(frame, startIndex, this.messageNumbers);
+    return 2;
   }
 }

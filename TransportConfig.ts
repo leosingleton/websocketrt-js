@@ -55,5 +55,5 @@ export class TransportConfig {
    * To avoid hitting TCP congestion control which will cause our throughput to vary wildly, we cap outgoing
    * data below the calculated maximum. This value controls the percent from 0 to 100.
    */
-  public maxPercentThroughput = 90;
+  public maxPercentThroughput = 75;
 }

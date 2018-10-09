@@ -1,8 +1,8 @@
 import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncManualResetEvent } from '../common/coordination';
 import { Connection } from './Connection';
 import { FramedSocketError, IFramedSocket } from './IFramedSocket';
-import { Message } from './Message';
 import { Queue } from './Queue';
+import { MessageCallback } from './MessageCallbackHandler';
 
 // React Native doesn't like any require statement whatsoever to the 'ws' library, at it depends on Node's 'util'
 // library. The majority of references are in the Simulator/ directory, which we can completely exclude from the React
@@ -22,8 +22,7 @@ export class WSFramedSocket implements IFramedSocket {
    * @param onMessageReceived Callback handler
    * @returns Established Connection object
    */
-  public static async connect(url: string, onMessageReceived: (message: Message) => Promise<void>):
-      Promise<Connection> {
+  public static async connect(url: string, onMessageReceived: MessageCallback): Promise<Connection> {
     // Create a client WebSocket
     let ws = new WebSocket(url);
     ws.binaryType = 'arraybuffer';
@@ -32,7 +31,10 @@ export class WSFramedSocket implements IFramedSocket {
     let wsfs = new WSFramedSocket(ws);
     await wsfs.waitForOpen();
 
-    return new Connection(wsfs, onMessageReceived);
+    let connection = new Connection(wsfs);
+    connection.registerCallback(onMessageReceived);
+    connection.beginDispatch();
+    return connection;
   }
   
   private constructor(ws: WebSocket) {

@@ -22,5 +22,9 @@ export class Queue<T> {
     return this._values;
   }
 
+  public isEmpty(): boolean {
+    return (this._values.length === 0);
+  }
+
   private _values: T[] = [];
 }

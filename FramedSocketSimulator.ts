@@ -1,6 +1,5 @@
 import { BinaryConverter } from './BinaryConverter';
 import { IFramedSocket, FramedSocketError } from './IFramedSocket';
-import { Message } from './Message';
 import { Queue } from './Queue';
 import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncManualResetEvent, AsyncTimerEvent } from
   '../common/coordination';
@@ -55,39 +54,62 @@ export class FramedSocketSimulator {
   }
 
   /**
-   * Fills a message's payload with a specific test pattern that can be validated to ensure the payload was
-   * properly split and reassembled.
-   * @param message Message to fill with a test pattern
+   * Fills a buffer with a specific test pattern that can be validated to ensure it was properly split and
+   * reassembled.
+   * @param buffer Buffer to fill with a test pattern
    */
-  public static fillMessageWithTestPattern(message: Message): void {
-    let length = message.payload.byteLength;
+  public static fillBufferWithTestPattern(buffer: Uint8Array): void {
+    let length = buffer.length;
+
+    if (length === 0) {
+      return;
+    } else if (length === 1) {
+      buffer[0] = 1;
+      return;
+    } else if (length === 2) {
+      buffer[0] = buffer[1] = 2;
+      return;
+    } else if (length === 3) {
+      buffer[0] = buffer[1] = buffer[2] = 3;
+      return;
+    }
 
     // Write the payload length to the first four bytes
-    BinaryConverter.writeInt32(message.payload, 0, length);
+    BinaryConverter.writeInt32(buffer, 0, length);
 
-    // Fill the rest of the bytes with the byte count, mod 256
+    // Fill the rest of the bytes with the byte count, mod 251 (a prime number to avoid repeats every 2^n)
     for (let n = 4; n < length; n++) {
-      message.payload[n] = n % 256;
+      buffer[n] = n % 251;
     }
   }
 
   /**
-   * Validates a message's payload matches the test pattern created by FillMessageWithTestPattern()
-   * @param message Message to validate
+   * Validates a buffer matches the test pattern created by fillBufferWithTestPattern(byte[])
+   * @param message Buffer to validate
    * @returns True if it matches; false if not
    */
-  public static validateMessageTestPattern(message: Message): boolean {
-    let length = message.payload.byteLength;
+  public static validateBufferTestPattern(buffer: Uint8Array): boolean {
+    let length = buffer.length;
+
+    if (length === 0) {
+      return true;
+    } else if (length === 1) {
+      return (buffer[0] === 1);
+    } else if (length === 2) {
+      return (buffer[0] === 2) && (buffer[1] === 2);
+    } else if (length === 3) {
+      return (buffer[0] === 3) && (buffer[1] === 3) && (buffer[2] === 3);
+    }
 
     // The first four bytes contain the payload length
-    let validateLength = BinaryConverter.readInt32(message.payload, 0);
+    let validateLength = BinaryConverter.readInt32(buffer, 0);
     if (length !== validateLength) {
       return false;
     }
 
-    // The rest of the bytes contain the byte count, mod 256
+    // The rest of the bytes contain the byte count, mod 251
     for (let n = 4; n < length; n++) {
-      if (message.payload[n] !== (n % 256)) {
+      if (buffer[n] !== (n % 251)) {
         return false;
       }
     }
@@ -138,7 +160,7 @@ class SocketSim implements IFramedSocket {
           return FramedSocketError.FrameTooLarge;
         }
 
-        new Uint8Array(buffer.buffer).set(frame.payload);
+        new Uint8Array(buffer.buffer).set(frame.payload, buffer.byteOffset);
         return frame.payload.byteLength;
       }
 
@@ -153,7 +175,7 @@ class SocketSim implements IFramedSocket {
     }
 
     let frame = new SimFrame();
-    frame.payload = new Uint8Array(buffer.buffer);
+    frame.payload = new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
     frame.deliveryTime = Date.now() + this._latency;
 
     this._sendQueue.queue.enqueue(frame);
