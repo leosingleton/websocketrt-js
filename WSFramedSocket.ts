@@ -31,7 +31,8 @@ export class WSFramedSocket implements IFramedSocket {
     let wsfs = new WSFramedSocket(ws);
     await wsfs.waitForOpen();
 
-    let connection = new Connection(wsfs);
+    // let connection = new Connection(wsfs); // Until the server supports capabilities
+    let connection = new Connection(wsfs, undefined, undefined, false);
     connection.registerCallback(onMessageReceived);
     connection.beginDispatch();
     return connection;
