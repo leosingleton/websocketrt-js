@@ -3,6 +3,7 @@ import { IFramedSocket, FramedSocketError } from './IFramedSocket';
 import { Queue } from './Queue';
 import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncManualResetEvent, AsyncTimerEvent } from
   '../common/coordination';
+import { Stopwatch } from '../common/Stopwatch';
 
 /** Simulates a WebSocket with latency for unit testing */
 export class FramedSocketSimulator {
@@ -126,6 +127,9 @@ class SocketSim implements IFramedSocket {
     this._receiveQueue = receiveQueue;
     this._latency = latency;
     this._throughput = throughput;
+
+    this._time = new Stopwatch();
+    this._time.start();
   }
 
   private _sim: FramedSocketSimulator;
@@ -133,6 +137,7 @@ class SocketSim implements IFramedSocket {
   private _receiveQueue: SimQueue;
   private _latency: number;
   private _throughput: number;
+  private _time: Stopwatch;
 
   public async receiveFrameAsync(buffer: DataView): Promise<number> {
     while (true) {
@@ -143,7 +148,7 @@ class SocketSim implements IFramedSocket {
       let frame = this._receiveQueue.queue.dequeue();
       if (frame) {
         // Simulate latency
-        let timeRemaining = frame.deliveryTime - Date.now();
+        let timeRemaining = frame.deliveryTime - this._time.getElapsedMilliseconds();
         if (timeRemaining > 0) {
           await AsyncTimerEvent.delay(timeRemaining);
         }
@@ -176,7 +181,7 @@ class SocketSim implements IFramedSocket {
 
     let frame = new SimFrame();
     frame.payload = new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
-    frame.deliveryTime = Date.now() + this._latency;
+    frame.deliveryTime = this._time.getElapsedMilliseconds() + this._latency;
 
     this._sendQueue.queue.enqueue(frame);
     this._sendQueue.event.set();

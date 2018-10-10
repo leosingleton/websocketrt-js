@@ -11,6 +11,7 @@ import { OutgoingMessage } from './OutgoingMessage';
 import { TransportCapabilities, TransportCapabilities1 } from './TransportCapabilities';
 import { MessageCallbackHandler, MessageCallbackEvents, MessageCallback } from './MessageCallbackHandler';
 import { DispatchQueue } from './DispatchQueue';
+import { Stopwatch } from '../common/Stopwatch';
 
 export class Connection {
   /**
@@ -144,7 +145,7 @@ export class Connection {
     let expectedDataFrames = new Queue<DataFrameControl>();
 
     // Timer used to estimate inbound throughput
-    let receiveTimer: number;
+    let receiveTimer: Stopwatch;
 
     // Byte counter used to estimate inbound throughput
     let bytesReceived: number;
@@ -183,7 +184,8 @@ export class Connection {
         bytesReceived += bytes;
         if (expectedDataFrames.getCount() === 0) {
           // This was the last data frame in the group of frames. Calculate the estimate.
-          let elapsedMilliseconds = Date.now() - receiveTimer;
+          receiveTimer.stop();
+          let elapsedMilliseconds = receiveTimer.getElapsedMilliseconds();
           if (bytesReceived > this._config.singlePacketMtu && elapsedMilliseconds > 0) {
             let estimate = bytesReceived * 1000 / elapsedMilliseconds;
             this._inboundThroughputEstimate.record(estimate);
@@ -230,7 +232,8 @@ export class Connection {
           // Start the timer to measure how long it takes to receive the data. We know the remote side sends all of the
           // data frames immediately following the control frame, so this provides an accurate estimate of inbound
           // throughput.
-          receiveTimer = Date.now();
+          receiveTimer = new Stopwatch();
+          receiveTimer.start();
           bytesReceived = 0;
 
           let dataFrames = controlFrame.data as DataFrameControl[];
@@ -254,7 +257,8 @@ export class Connection {
           // Received a Pong. Use this to update our RTT estimate.
           let timer = this._pingResponseTimer; this._pingResponseTimer = null;
           if (timer) {
-            this._localRttEstimate.record(Date.now() - timer);
+            timer.stop();
+            this._localRttEstimate.record(timer.getElapsedMilliseconds());
           }
 
           this._missedPingCount = 0;
@@ -441,7 +445,8 @@ export class Connection {
           this.sendControlFrame(0x10);
 
           // Measure the amount of time until we receive a Pong
-          let timer = Date.now();
+          let timer = new Stopwatch();
+          timer.start();
           this._pingResponseTimer = timer;
           this._pingCount++;
         } else {
@@ -674,7 +679,7 @@ export class Connection {
   /**
    * Measures the interval between sending a Ping and receiving a Pong. This is used to calculate RTT.
    */
-  private _pingResponseTimer: number;
+  private _pingResponseTimer: Stopwatch;
 
   /**
    * Number of pings sent

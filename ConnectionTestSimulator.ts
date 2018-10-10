@@ -6,6 +6,7 @@ import { Message } from './Message';
 import { Queue } from './Queue';
 import { AsyncAutoResetEvent, AsyncTimerEvent, AsyncEventWaitHandle } from '../common/coordination';
 import { OutgoingMessage } from './OutgoingMessage';
+import { Stopwatch } from '../common/Stopwatch';
 
 /**
  * Helper class to build a test case using the FramedSocketSimulator
@@ -151,13 +152,13 @@ export class SimulatedConnection extends Connection {
   public async expectTestMessages(messageCount: number, bytes: number, minMilliseconds: number,
       maxMilliseconds: number): Promise<void> {
     let oneSecondTimer = new AsyncTimerEvent(1000, true);
-    let start = performance.now();
+    let start = Stopwatch.startNew();
     let elapsed = 0;
 
     do {
       // Wait for a message, or wake every 1 second
       await AsyncEventWaitHandle.whenAny([this._messageReceivedEvent, oneSecondTimer]);
-      elapsed = performance.now() - start;
+      elapsed = start.getElapsedMilliseconds();
 
       if (this._messagesReceived >= messageCount || this._messageBytesReceived >= bytes) {
         expect(this._messagesReceived).toEqual(messageCount);
