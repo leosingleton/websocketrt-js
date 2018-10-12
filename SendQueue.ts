@@ -12,6 +12,7 @@ export class SendQueue {
 
   public enqueue(message: OutgoingMessage): void {
     let priority = message.priority;
+
     let queue = this._messageQueues[priority];
     if (!queue) {
       queue = new Queue<OutgoingMessage>();
@@ -19,6 +20,8 @@ export class SendQueue {
     }
 
     queue.enqueue(message);
+
+    this._highestPriority = Math.min(this._highestPriority, priority);
   }
 
   /**
