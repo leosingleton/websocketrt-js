@@ -148,13 +148,15 @@ export class Connection {
     let receiveTimer: Stopwatch;
 
     // Byte counter used to estimate inbound throughput
-    let bytesReceived: number;
+    let bytesReceived = 0;
 
     while (true) {
       // Determine the next expected frame and where the data should be stored
       let expectedDataFrame: DataFrameControl;
       let segment: DataView;
-      if (expectedDataFrame = expectedDataFrames.dequeue()) {
+      if (expectedDataFrames.getCount() > 0) {
+        expectedDataFrame = expectedDataFrames.dequeue();
+
         // We are expecting a data frame
         let buffer = this._receivedMessages[expectedDataFrame.messageNumber].getPayload();
         let offset = expectedDataFrame.offset;
@@ -174,6 +176,11 @@ export class Connection {
         return;
       }
       this._bytesIn += bytes;
+
+      // Resize segment to match the number of bytes returned
+      if (bytes !== segment.byteLength) {
+        segment = new DataView(segment.buffer, segment.byteOffset, bytes);
+      }
 
       if (expectedDataFrame) {
         //
