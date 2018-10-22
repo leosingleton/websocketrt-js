@@ -16,28 +16,7 @@ const WS_CLOSED = 3;
  * Maps a WebSocket to the IFramedSocket interface
  */
 export class WSFramedSocket implements IFramedSocket {
-  /**
-   * Creates a Connection object backed by an underlying WebSocket
-   * @param url URL to connect to
-   * @param onMessageReceived Callback handler
-   * @returns Established Connection object
-   */
-  public static async connect(url: string, onMessageReceived: MessageCallback): Promise<Connection> {
-    // Create a client WebSocket
-    let ws = new WebSocket(url);
-    ws.binaryType = 'arraybuffer';
-
-    // Create the WSFramedSocket and wait for it to connect
-    let wsfs = new WSFramedSocket(ws);
-    await wsfs.waitForOpen();
-
-    let connection = new Connection(wsfs);
-    connection.registerCallback(onMessageReceived);
-    connection.beginDispatch();
-    return connection;
-  }
-  
-  private constructor(ws: WebSocket) {
+  public constructor(ws: WebSocket) {
     this._ws = ws;
     this._isOpen = new AsyncManualResetEvent();
     this._isClosed = new AsyncManualResetEvent();
@@ -53,7 +32,7 @@ export class WSFramedSocket implements IFramedSocket {
   /**
    * Waits for the WebSocket to enter the open state. Throws an exception if it fails to open.
    */
-  private async waitForOpen(): Promise<void> {
+  public async waitForOpen(): Promise<void> {
     // Wait for either open or closed, whichever happens first
     await AsyncEventWaitHandle.whenAny([this._isOpen, this._isClosed]);
 
