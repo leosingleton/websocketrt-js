@@ -1,4 +1,5 @@
 import { BinaryConverter } from './BinaryConverter';
+import { VersionComparer } from '../common/VersionComparer';
 
 /** Capabilities negotiated between both ends of the transport during the initial connection */
 export enum TransportCapabilities1 {
@@ -94,20 +95,14 @@ export class TransportCapabilities {
    * @returns Resulting capability object
    */
   public static negotiate(caps1: TransportCapabilities, caps2: TransportCapabilities): TransportCapabilities {
+    let version = VersionComparer.lower(
+      [caps1.majorVersion, caps1.minorVersion],
+      [caps2.majorVersion, caps2.minorVersion]);
+
     let result = new TransportCapabilities();
     result.capabilities1 = caps1.capabilities1 & caps2.capabilities1;
-
-    if (caps1.majorVersion < caps2.majorVersion) {
-      result.majorVersion = caps1.majorVersion;
-      result.minorVersion = caps1.minorVersion;
-    } else if (caps1.majorVersion > caps2.majorVersion) {
-      result.majorVersion = caps2.majorVersion;
-      result.minorVersion = caps2.minorVersion;
-    } else {
-      result.majorVersion = caps1.majorVersion;
-      result.minorVersion = Math.min(caps1.minorVersion, caps2.minorVersion);
-    }
-
+    result.majorVersion = version[0];
+    result.minorVersion = version[1];
     return result;
   }
 }
