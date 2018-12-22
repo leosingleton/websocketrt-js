@@ -6,7 +6,7 @@ import { Message } from './Message';
  * This enum is used as a bitmask. It is possible that all flags are set simultaneously if the payload was
  * delivered in one frame. The bitmask may also be used to filter which types of events to receive.
  */
-export enum MessageCallbackEvents {
+export const enum MessageCallbackEvents {
   /** No bits are set */
   None = 0,
 
