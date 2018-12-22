@@ -28,7 +28,7 @@ export interface IFramedSocket {
 /** 
  * Error codes returned by IFramedSocket.ReceiveFrameAsync()
  */
-export enum FramedSocketError {
+export const enum FramedSocketError {
   /**
    * The remote end closed the socket
    */

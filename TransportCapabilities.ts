@@ -1,7 +1,7 @@
 import { BinaryConverter } from './BinaryConverter';
 
 /** Capabilities negotiated between both ends of the transport during the initial connection */
-export enum TransportCapabilities1 {
+export const enum TransportCapabilities1 {
   /** None */
   None = 0,
 
