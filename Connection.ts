@@ -1,7 +1,7 @@
 import { MovingAverage } from './MovingAverage';
 import { ControlFrame, DataFrameControl, MessageCancelControl } from './ControlFrame';
 import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncManualResetEvent, AsyncTimerEvent } from
-  '../common/coordination';
+  '@leosingleton/commonlibs';
 import { IFramedSocket } from './IFramedSocket';
 import { Message } from './Message';
 import { Queue } from './Queue';

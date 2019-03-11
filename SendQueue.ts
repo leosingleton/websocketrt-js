@@ -1,4 +1,3 @@
-import { AsyncAutoResetEvent } from '../common/coordination';
 import { Queue } from './Queue';
 import { OutgoingMessage } from './OutgoingMessage';
 

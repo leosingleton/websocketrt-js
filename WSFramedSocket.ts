@@ -1,4 +1,4 @@
-import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncManualResetEvent } from '../common/coordination';
+import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncManualResetEvent } from '@leosingleton/commonlibs';
 import { Connection } from './Connection';
 import { FramedSocketError, IFramedSocket } from './IFramedSocket';
 import { Queue } from './Queue';

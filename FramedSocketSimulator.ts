@@ -1,9 +1,8 @@
 import { BinaryConverter } from './BinaryConverter';
 import { IFramedSocket, FramedSocketError } from './IFramedSocket';
 import { Queue } from './Queue';
-import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncManualResetEvent, AsyncTimerEvent } from
-  '../common/coordination';
-import { Stopwatch } from '@leosingleton/commonlibs';
+import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncManualResetEvent,
+  Stopwatch, Task } from '@leosingleton/commonlibs';
 
 /** Simulates a WebSocket with latency for unit testing */
 export class FramedSocketSimulator {
@@ -150,14 +149,14 @@ class SocketSim implements IFramedSocket {
         // Simulate latency
         let timeRemaining = frame.deliveryTime - this._time.getElapsedMilliseconds();
         if (timeRemaining > 0) {
-          await AsyncTimerEvent.delay(timeRemaining);
+          await Task.delay(timeRemaining);
         }
 
         // Simulate throughput
         if (this._throughput > 0) {
           let throughputDelay = frame.payload.byteLength * 1000 / this._throughput;
           if (throughputDelay > 0) {
-            await AsyncTimerEvent.delay(throughputDelay);
+            await Task.delay(throughputDelay);
           }
         }
 
