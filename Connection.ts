@@ -11,7 +11,7 @@ import { OutgoingMessage } from './OutgoingMessage';
 import { TransportCapabilities, TransportCapabilities1 } from './TransportCapabilities';
 import { MessageCallbackHandler, MessageCallbackEvents, MessageCallback } from './MessageCallbackHandler';
 import { DispatchQueue } from './DispatchQueue';
-import { Stopwatch } from '../common/Stopwatch';
+import { Stopwatch } from '@leosingleton/commonlibs';
 
 export class Connection {
   /**

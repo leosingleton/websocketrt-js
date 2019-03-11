@@ -6,7 +6,7 @@ import { Message } from './Message';
 import { Queue } from './Queue';
 import { AsyncAutoResetEvent, AsyncTimerEvent, AsyncEventWaitHandle } from '../common/coordination';
 import { OutgoingMessage } from './OutgoingMessage';
-import { Stopwatch } from '../common/Stopwatch';
+import { Stopwatch } from '@leosingleton/commonlibs';
 
 /**
  * Helper class to build a test case using the FramedSocketSimulator

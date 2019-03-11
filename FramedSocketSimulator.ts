@@ -3,7 +3,7 @@ import { IFramedSocket, FramedSocketError } from './IFramedSocket';
 import { Queue } from './Queue';
 import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncManualResetEvent, AsyncTimerEvent } from
   '../common/coordination';
-import { Stopwatch } from '../common/Stopwatch';
+import { Stopwatch } from '@leosingleton/commonlibs';
 
 /** Simulates a WebSocket with latency for unit testing */
 export class FramedSocketSimulator {

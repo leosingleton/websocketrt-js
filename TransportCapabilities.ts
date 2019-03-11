@@ -1,5 +1,5 @@
 import { BinaryConverter } from './BinaryConverter';
-import { VersionComparer } from '../common/VersionComparer';
+import { VersionComparer } from '@leosingleton/commonlibs';
 
 /** Capabilities negotiated between both ends of the transport during the initial connection */
 export const enum TransportCapabilities1 {
