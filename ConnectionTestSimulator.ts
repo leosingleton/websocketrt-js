@@ -3,9 +3,9 @@ import { Connection } from './Connection';
 import { IFramedSocket } from './IFramedSocket';
 import { MessageCallbackEvents } from './MessageCallbackHandler';
 import { Message } from './Message';
-import { Queue } from './Queue';
 import { OutgoingMessage } from './OutgoingMessage';
-import { AsyncAutoResetEvent, AsyncTimerEvent, AsyncEventWaitHandle, Stopwatch } from '@leosingleton/commonlibs';
+import { AsyncAutoResetEvent, AsyncTimerEvent, AsyncEventWaitHandle, Queue, Stopwatch } from
+  '@leosingleton/commonlibs';
 
 /**
  * Helper class to build a test case using the FramedSocketSimulator

@@ -1,4 +1,4 @@
-import { Queue } from './Queue';
+import { Queue } from '@leosingleton/commonlibs';
 import { OutgoingMessage } from './OutgoingMessage';
 
 /**

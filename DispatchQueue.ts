@@ -1,5 +1,5 @@
 import { Message } from './Message';
-import { Queue } from './Queue';
+import { Queue } from '@leosingleton/commonlibs';
 
 /**
  * Thread-safe FIFO queue to dispatch messages from the transport layer

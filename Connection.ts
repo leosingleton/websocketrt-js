@@ -1,10 +1,8 @@
-import { MovingAverage } from './MovingAverage';
 import { ControlFrame, DataFrameControl, MessageCancelControl } from './ControlFrame';
-import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncManualResetEvent, AsyncTimerEvent } from
+import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncManualResetEvent, AsyncTimerEvent, MovingAverage, Queue } from
   '@leosingleton/commonlibs';
 import { IFramedSocket } from './IFramedSocket';
 import { Message } from './Message';
-import { Queue } from './Queue';
 import { SendQueue } from './SendQueue';
 import { TransportConfig } from './TransportConfig';
 import { OutgoingMessage } from './OutgoingMessage';

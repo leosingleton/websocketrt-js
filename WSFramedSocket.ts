@@ -1,8 +1,5 @@
-import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncManualResetEvent } from '@leosingleton/commonlibs';
-import { Connection } from './Connection';
+import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncManualResetEvent, Queue } from '@leosingleton/commonlibs';
 import { FramedSocketError, IFramedSocket } from './IFramedSocket';
-import { Queue } from './Queue';
-import { MessageCallback } from './MessageCallbackHandler';
 
 // React Native doesn't like any require statement whatsoever to the 'ws' library, at it depends on Node's 'util'
 // library. The majority of references are in the Simulator/ directory, which we can completely exclude from the React

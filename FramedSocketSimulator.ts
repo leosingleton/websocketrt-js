@@ -1,7 +1,5 @@
-import { BinaryConverter } from './BinaryConverter';
 import { IFramedSocket, FramedSocketError } from './IFramedSocket';
-import { Queue } from './Queue';
-import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncManualResetEvent,
+import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncManualResetEvent, BinaryConverter, Queue,
   Stopwatch, Task } from '@leosingleton/commonlibs';
 
 /** Simulates a WebSocket with latency for unit testing */

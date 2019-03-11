@@ -1,4 +1,4 @@
-import { BinaryConverter } from './BinaryConverter';
+import { BinaryConverter } from '@leosingleton/commonlibs';
 import { TransportCapabilities } from './TransportCapabilities';
 
 /** 
