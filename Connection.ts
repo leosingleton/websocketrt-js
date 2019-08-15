@@ -188,7 +188,7 @@ export class Connection {
         bytesReceived += bytes;
         if (expectedDataFrames.getCount() === 0) {
           // This was the last data frame in the group of frames. Calculate the estimate.
-          receiveTimer.stop();
+          receiveTimer.stopTimer();
           let elapsedMilliseconds = receiveTimer.getElapsedMilliseconds();
           if (bytesReceived > this._config.singlePacketMtu && elapsedMilliseconds > 0) {
             let estimate = bytesReceived * 1000 / elapsedMilliseconds;
@@ -237,7 +237,7 @@ export class Connection {
           // data frames immediately following the control frame, so this provides an accurate estimate of inbound
           // throughput.
           receiveTimer = new Stopwatch();
-          receiveTimer.start();
+          receiveTimer.startTimer();
           bytesReceived = 0;
 
           let dataFrames = controlFrame.data as DataFrameControl[];
@@ -261,7 +261,7 @@ export class Connection {
           // Received a Pong. Use this to update our RTT estimate.
           let timer = this._pingResponseTimer; this._pingResponseTimer = null;
           if (timer) {
-            timer.stop();
+            timer.stopTimer();
             this._localRttEstimate.record(timer.getElapsedMilliseconds());
           }
 
@@ -450,7 +450,7 @@ export class Connection {
 
           // Measure the amount of time until we receive a Pong
           let timer = new Stopwatch();
-          timer.start();
+          timer.startTimer();
           this._pingResponseTimer = timer;
           this._pingCount++;
         } else {

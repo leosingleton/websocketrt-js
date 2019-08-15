@@ -126,7 +126,7 @@ class SocketSim implements IFramedSocket {
     this._throughput = throughput;
 
     this._time = new Stopwatch();
-    this._time.start();
+    this._time.startTimer();
   }
 
   private _sim: FramedSocketSimulator;
