@@ -21,9 +21,9 @@ export class WSFramedSocket implements IFramedSocket {
     this._receiveEvent = new AsyncAutoResetEvent();
 
     ws.onmessage = e => { this._onServerMessage(e); }
-    ws.onopen = () => { this._isOpen.set(); }
-    ws.onerror = () => { this._isClosed.set(); }
-    ws.onclose = () => { this._isClosed.set(); }
+    ws.onopen = () => { this._isOpen.setEvent(); }
+    ws.onerror = () => { this._isClosed.setEvent(); }
+    ws.onclose = () => { this._isClosed.setEvent(); }
   }
 
   /**
@@ -41,7 +41,7 @@ export class WSFramedSocket implements IFramedSocket {
 
   private _onServerMessage(e: MessageEvent): void {
     this._receiveQueue.enqueue(e);
-    this._receiveEvent.set();
+    this._receiveEvent.setEvent();
   }
 
   public async receiveFrameAsync(buffer: DataView): Promise<number> {

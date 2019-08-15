@@ -82,7 +82,7 @@ export class SimulatedConnection extends Connection {
 
       this._messagesReceived++;
       this._messageBytesReceived += message._bytesReceived;
-      this._messageReceivedEvent.set();
+      this._messageReceivedEvent.setEvent();
     });
 
     this.registerCallback((message: Message, events: MessageCallbackEvents) => {

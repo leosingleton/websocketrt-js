@@ -42,12 +42,12 @@ export class FramedSocketSimulator {
 
   public close(waitForRemote: boolean): void {
     if (!this._isClosed.getIsSet()) {
-      this._isClosed.set();
+      this._isClosed.setEvent();
       this._gracefulClose = waitForRemote;
 
       // Wake any receivers so they return a closing error code
-      this._socket1ToSocket2.event.set();
-      this._socket2ToSocket1.event.set();
+      this._socket1ToSocket2.event.setEvent();
+      this._socket2ToSocket1.event.setEvent();
     }
   }
 
@@ -147,14 +147,14 @@ class SocketSim implements IFramedSocket {
         // Simulate latency
         let timeRemaining = frame.deliveryTime - this._time.getElapsedMilliseconds();
         if (timeRemaining > 0) {
-          await Task.delay(timeRemaining);
+          await Task.delayAsync(timeRemaining);
         }
 
         // Simulate throughput
         if (this._throughput > 0) {
           let throughputDelay = frame.payload.byteLength * 1000 / this._throughput;
           if (throughputDelay > 0) {
-            await Task.delay(throughputDelay);
+            await Task.delayAsync(throughputDelay);
           }
         }
 
@@ -181,7 +181,7 @@ class SocketSim implements IFramedSocket {
     frame.deliveryTime = this._time.getElapsedMilliseconds() + this._latency;
 
     this._sendQueue.queue.enqueue(frame);
-    this._sendQueue.event.set();
+    this._sendQueue.event.setEvent();
   }
 
   public async closeAsync(closeReason: string, waitForRemote: boolean): Promise<void> {

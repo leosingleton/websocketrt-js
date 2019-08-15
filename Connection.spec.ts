@@ -45,7 +45,7 @@ describe("Connection", () => {
     await sim.connection2.expectTestMessages(1, messageSize, 4000, 6000);
 
     // Send 1 MB from c2 to c1
-    await Task.delay(500);
+    await Task.delayAsync(500);
     await sim.connection2.sendTestMessage(messageSize);
 
     // 1 MB should take 4.25 seconds at 256 KB/sec and 250 ms latency. Allow anywhere from 4 to 6 seconds.
@@ -98,7 +98,7 @@ describe("Connection", () => {
       }
       if ((events & MessageCallbackEvents.Complete) !== 0) {
         completeEvents++;
-        isComplete.set();
+        isComplete.setEvent();
       }
     };
 
@@ -112,7 +112,7 @@ describe("Connection", () => {
 
     // Wait for the message to be received. Give it 1 second more to catch any late callbacks.
     await isComplete.waitAsync();
-    await Task.delay(1000);
+    await Task.delayAsync(1000);
 
     // We should receive a single NewMessage event from the connection callback
     expect(newMessageEvents).toEqual(1);
@@ -161,11 +161,11 @@ describe("Connection", () => {
     let message = await sim.connection1.sendTestMessage(messageSize);
 
     // Cancel the message after 1 second
-    await Task.delay(1000);
+    await Task.delayAsync(1000);
     sim.connection1.cancel(message);
 
     // After 10 seconds, ensure the message is partially, but cancelled before being fully-delivered to c2
-    await Task.delay(10000);
+    await Task.delayAsync(10000);
     expect(sim.connection2.getMessagesReceived()).toEqual(0);
     expect(sim.connection2.getNewMessages()).toEqual(1);
     expect(sim.connection2.getCancelledMessages()).toEqual(1);
@@ -198,11 +198,11 @@ describe("Connection", () => {
     let message = await simAB.connection1.sendTestMessage(messageSize);
 
     // Cancel the message after 1 second
-    await Task.delay(1000);
+    await Task.delayAsync(1000);
     simAB.connection1.cancel(message);
 
     // After 10 sec, ensure the message is partially received, but cancelled before being fully-delivered to C
-    await Task.delay(10000);
+    await Task.delayAsync(10000);
     expect(simBC.connection2.getMessagesReceived()).toEqual(0);
     expect(simBC.connection2.getNewMessages()).toEqual(1);
     expect(simBC.connection2.getCancelledMessages()).toEqual(1);

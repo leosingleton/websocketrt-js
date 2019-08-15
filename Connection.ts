@@ -109,7 +109,7 @@ export class Connection {
         }
       }
 
-      this._isClosing.set();
+      this._isClosing.setEvent();
     }
   }
 
@@ -202,7 +202,7 @@ export class Connection {
         message._bytesReceived += bytes;
 
         this._dispatchQueue.enqueue(message);
-        this._dispatchEvent.set();
+        this._dispatchEvent.setEvent();
 
         if (expectedDataFrame.isLast) {
           // Remove the message from the _ReceivedMessages array once it is completely received. This way
@@ -228,7 +228,7 @@ export class Connection {
           if ((this._negotiatedCapabilities.capabilities1 & TransportCapabilities1.Capabilities) !== 0 &&
               !this._capabilitiesSent) {
             this._sendCapabilities = true;
-            this._dataToSendEvent.set();
+            this._dataToSendEvent.setEvent();
           }          
         } else if (controlFrame.opCode >= 0x01 && controlFrame.opCode <= 0x0f) {
           // Prepare for subsequent data frames
@@ -256,7 +256,7 @@ export class Connection {
         } else if (controlFrame.opCode === 0x10) {
           // Received a Ping. Send a Pong.
           this._sendPong = true;
-          this._pongEvent.set();
+          this._pongEvent.setEvent();
         } else if (controlFrame.opCode === 0x11) {
           // Received a Pong. Use this to update our RTT estimate.
           let timer = this._pingResponseTimer; this._pingResponseTimer = null;
@@ -294,7 +294,7 @@ export class Connection {
 
     // Send the cancel events
     this._dispatchQueue.enqueue(this._receivedMessages[messageNumber]);
-    this._dispatchEvent.set();
+    this._dispatchEvent.setEvent();
 
     // Help the GC reclaim any memory consumed by the partially-received message
     this._receivedMessages[messageNumber] = undefined;
@@ -375,7 +375,7 @@ export class Connection {
       // If we are forwarding a message before it is fully-received, register a callback with it to ensure we
       // signal the _DataToSendEvent whenever additional payload data is available
       message.registerCallback((msg: Message, events: MessageCallbackEvents) => {
-        this._dataToSendEvent.set();
+        this._dataToSendEvent.setEvent();
       }, MessageCallbackEvents.PayloadReceived);
 
       // Likewise, if the receiving message gets cancelled, cancel the outgoing copy too
@@ -386,7 +386,7 @@ export class Connection {
 
     // Enqueue the message
     this._sendQueue.enqueue(messageOut);
-    this._dataToSendEvent.set();
+    this._dataToSendEvent.setEvent();
     return messageOut;
   }
 
@@ -400,7 +400,7 @@ export class Connection {
    */
   public cancel(message: OutgoingMessage): void {
     this._outgoingMessagesToCancel.enqueue(message);
-    this._dataToSendEvent.set();
+    this._dataToSendEvent.setEvent();
   }
 
   private async _sendLoop(): Promise<void> {
@@ -505,7 +505,7 @@ export class Connection {
       // If we have data to send, send it
       if (dataFrames.getCount() > 0) {
         // Send the control frame
-        this.sendControlFrame(dataFrames.getCount(), dataFrames.toArray());
+        this.sendControlFrame(dataFrames.getCount(), dataFrames.toValueArray());
 
         // Send the data frames
         while (dataFrames.getCount() > 0) {
@@ -515,7 +515,7 @@ export class Connection {
           // reuse by another message
           if (dataFrame.isLast) {
             this._sendMessageNumbers.enqueue(dataFrame.messageNumber);
-            this._messageNumberEvent.set();
+            this._messageNumberEvent.setEvent();
           }
 
           // Send the actual data
@@ -585,7 +585,7 @@ export class Connection {
 
     // Return the message number to be reused
     this._sendMessageNumbers.enqueue(message.messageNumber);
-    this._messageNumberEvent.set();
+    this._messageNumberEvent.setEvent();
 
     return true;
   }
