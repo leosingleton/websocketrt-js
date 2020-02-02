@@ -4,7 +4,7 @@ import { IFramedSocket } from './IFramedSocket';
 import { MessageCallbackEvents } from './MessageCallbackHandler';
 import { Message } from './Message';
 import { OutgoingMessage } from './OutgoingMessage';
-import { AsyncAutoResetEvent, AsyncTimerEvent, AsyncEventWaitHandle, Queue, Stopwatch } from
+import { AsyncAutoResetEvent, AsyncTimerEvent, AsyncEventWaitHandle, Queue, Stopwatch, Task } from
   '@leosingleton/commonlibs';
 
 /**
@@ -63,7 +63,9 @@ export class ConnectionTestSimulator extends FramedSocketSimulator {
         expect(msg.isComplete()).toBeFalsy();
       }
 
-      destConnection.send(msg, 0, msg.getHeader());
+      Task.runAsyncVoid(async () => {
+        await destConnection.send(msg, 0, msg.getHeader());
+      });
     }, MessageCallbackEvents.NewMessage);
   }
 }

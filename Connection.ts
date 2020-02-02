@@ -362,7 +362,7 @@ export class Connection {
     // Get a message number. We may have to block waiting for one to become available if we have exceeded the
     // transport config's MaxConcurrentMessages.
     let messageNumber: number;
-    while ((messageNumber = this._sendMessageNumbers.dequeue()) == null) {
+    while ((messageNumber = this._sendMessageNumbers.dequeue()) === undefined) {
       await AsyncEventWaitHandle.whenAny([this._messageNumberEvent, this._isClosing]);
       if (this._isClosing.getIsSet()) {
         return;
@@ -427,7 +427,7 @@ export class Connection {
 
       if (this._sendPong) {
         // Send the pong control frame
-        this.sendControlFrame(0x11);
+        await this.sendControlFrame(0x11);
         this._sendPong = false;
       }
 
@@ -446,7 +446,7 @@ export class Connection {
         // Only send a ping if there is not one currently outstanding
         if (!this._pingResponseTimer) {
           // Send the Ping frame
-          this.sendControlFrame(0x10);
+          await this.sendControlFrame(0x10);
 
           // Measure the amount of time until we receive a Pong
           const timer = new Stopwatch();
@@ -505,7 +505,7 @@ export class Connection {
       // If we have data to send, send it
       if (dataFrames.getCount() > 0) {
         // Send the control frame
-        this.sendControlFrame(dataFrames.getCount(), dataFrames.toValueArray());
+        await this.sendControlFrame(dataFrames.getCount(), dataFrames.toValueArray());
 
         // Send the data frames
         while (dataFrames.getCount() > 0) {
