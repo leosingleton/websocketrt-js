@@ -1,10 +1,10 @@
 import { ControlFrame, DataFrameControl, MessageCancelControl } from './ControlFrame';
 import { TransportCapabilities, TransportCapabilities1 } from './TransportCapabilities';
 
-describe("ControlFrame", () => {
+describe('ControlFrame', () => {
 
-  it("Ensures a control frame respresenting capabilities (OpCode=0x00) can be serialized and deserialized", () => {
-    let frame1 = new ControlFrame();
+  it('Ensures a control frame respresenting capabilities (OpCode=0x00) can be serialized and deserialized', () => {
+    const frame1 = new ControlFrame();
     frame1.opCode = 0x00;
     frame1.rttEstimate = 42;
     frame1.throughputEstimate = 12345678;
@@ -12,28 +12,28 @@ describe("ControlFrame", () => {
     frame1.data.majorVersion = 3;
     frame1.data.minorVersion = 5;
     frame1.data.capabilities1 = TransportCapabilities1.Capabilities | TransportCapabilities1.Capabilities2;
-    let bytes = frame1.write();
+    const bytes = frame1.write();
 
-    let frame2 = new ControlFrame();
+    const frame2 = new ControlFrame();
     frame2.read(bytes);
     expect(frame1.opCode).toEqual(frame2.opCode);
     expect(frame1.rttEstimate).toEqual(frame2.rttEstimate);
     expect(frame1.throughputEstimate).toEqual(frame2.throughputEstimate);
-    let data1 = frame1.data;
-    let data2 = frame2.data as TransportCapabilities;
+    const data1 = frame1.data;
+    const data2 = frame2.data as TransportCapabilities;
     expect(data1.majorVersion).toEqual(data2.majorVersion);
     expect(data1.minorVersion).toEqual(data2.minorVersion);
     expect(data1.capabilities1).toEqual(data2.capabilities1);
   });
 
-  it("Ensures a control frame respresenting a ping can be serialized and deserialized", () => {
-    let frame1 = new ControlFrame();
+  it('Ensures a control frame respresenting a ping can be serialized and deserialized', () => {
+    const frame1 = new ControlFrame();
     frame1.opCode = 0x10;
     frame1.rttEstimate = 42;
     frame1.throughputEstimate = 12345678;
-    let bytes = frame1.write();
+    const bytes = frame1.write();
 
-    let frame2 = new ControlFrame();
+    const frame2 = new ControlFrame();
     frame2.read(bytes);
     expect(frame1.opCode).toEqual(frame2.opCode);
     expect(frame1.rttEstimate).toEqual(frame2.rttEstimate);
@@ -41,8 +41,8 @@ describe("ControlFrame", () => {
     expect(frame1.data).toEqual(frame2.data);
   });
 
-  it("Ensures a control frame preceding data frames can be serialized", () => {
-    let frame1 = new ControlFrame();
+  it('Ensures a control frame preceding data frames can be serialized', () => {
+    const frame1 = new ControlFrame();
     frame1.opCode = 0x02;
     frame1.rttEstimate = 4096;
     frame1.throughputEstimate = 123456789;
@@ -58,9 +58,9 @@ describe("ControlFrame", () => {
     frame1.data[1].length = 20000000;
     frame1.data[1].isFirst = false;
     frame1.data[1].isLast = true;
-    let bytes = frame1.write();
+    const bytes = frame1.write();
 
-    let frame2 = new ControlFrame();
+    const frame2 = new ControlFrame();
     frame2.read(bytes);
     expect(frame1.opCode).toEqual(frame2.opCode);
     expect(frame1.rttEstimate).toEqual(frame2.rttEstimate);
@@ -68,16 +68,16 @@ describe("ControlFrame", () => {
     expect(frame1.data).toEqual(frame2.data as DataFrameControl[]);
   });
 
-  it("Ensures a control frame respresenting a cancel (OpCode=0x12) can be serialized and deserialized", () => {
-    let frame1 = new ControlFrame();
+  it('Ensures a control frame respresenting a cancel (OpCode=0x12) can be serialized and deserialized', () => {
+    const frame1 = new ControlFrame();
     frame1.opCode = 0x12;
     frame1.rttEstimate = 4096;
     frame1.throughputEstimate = 123456789;
     frame1.data = new MessageCancelControl();
     frame1.data.messageNumbers = 42;
-    let bytes = frame1.write();
+    const bytes = frame1.write();
 
-    let frame2 = new ControlFrame();
+    const frame2 = new ControlFrame();
     frame2.read(bytes);
     expect(frame1.opCode).toEqual(frame2.opCode);
     expect(frame1.rttEstimate).toEqual(frame2.rttEstimate);

@@ -1,6 +1,8 @@
 import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncManualResetEvent, Queue } from '@leosingleton/commonlibs';
 import { FramedSocketError, IFramedSocket } from './IFramedSocket';
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 // React Native doesn't like any require statement whatsoever to the 'ws' library, at it depends on Node's 'util'
 // library. The majority of references are in the Simulator/ directory, which we can completely exclude from the React
 // Native build, but the code below needs access to the constants, so we simply duplicate their definitions here.
@@ -20,10 +22,10 @@ export class WSFramedSocket implements IFramedSocket {
     this._receiveQueue = new Queue<MessageEvent>();
     this._receiveEvent = new AsyncAutoResetEvent();
 
-    ws.onmessage = e => { this._onServerMessage(e); }
-    ws.onopen = () => { this._isOpen.setEvent(); }
-    ws.onerror = () => { this._isClosed.setEvent(); }
-    ws.onclose = () => { this._isClosed.setEvent(); }
+    ws.onmessage = e => { this._onServerMessage(e); };
+    ws.onopen = () => { this._isOpen.setEvent(); };
+    ws.onerror = () => { this._isClosed.setEvent(); };
+    ws.onclose = () => { this._isClosed.setEvent(); };
   }
 
   /**
@@ -56,18 +58,18 @@ export class WSFramedSocket implements IFramedSocket {
       }
 
       // Get a frame from the receive queue
-      let e = this._receiveQueue.dequeue();
+      const e = this._receiveQueue.dequeue();
       if (e) {
-        let data = new Uint8Array(e.data);
+        const data = new Uint8Array(e.data);
 
         // If the client has exceeded the maximum messsage size set below, terminate its connection
-        let bytesReceived = data.length;
+        const bytesReceived = data.length;
         if (bytesReceived > buffer.byteLength) {
           return FramedSocketError.FrameTooLarge;
         }
 
         // Copy the data into the destination buffer
-        let arr = new Uint8Array(buffer.buffer);
+        const arr = new Uint8Array(buffer.buffer);
         arr.set(data, buffer.byteOffset);
 
         return bytesReceived;

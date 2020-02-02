@@ -6,7 +6,7 @@ import { Message } from './Message';
  * before completion.
  */
 export class OutgoingMessage {
-  constructor(messageNumber: number, message: Message, priority: number, header?: Uint8Array) {
+  public constructor(messageNumber: number, message: Message, priority: number, header?: Uint8Array) {
     this.messageNumber = messageNumber;
     this.message = message;
     this.priority = priority;

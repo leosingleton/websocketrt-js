@@ -25,7 +25,7 @@ export interface IFramedSocket {
   closeAsync(closeReason: string, waitForRemote: boolean): void;
 }
 
-/** 
+/**
  * Error codes returned by IFramedSocket.ReceiveFrameAsync()
  */
 export const enum FramedSocketError {

@@ -2,7 +2,7 @@ import { Message } from './Message';
 
 /**
  * Enumerated value indicated the reason a message callback is executed
- * 
+ *
  * This enum is used as a bitmask. It is possible that all flags are set simultaneously if the payload was
  * delivered in one frame. The bitmask may also be used to filter which types of events to receive.
  */
@@ -43,8 +43,8 @@ export class MessageCallbackHandler {
    */
   public registerCallback(callback: MessageCallback, events: MessageCallbackEvents): void {
     this._callbacks.push({
-      callback: callback,
-      events: events
+      callback,
+      events
     });
   }
 

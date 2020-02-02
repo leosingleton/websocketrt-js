@@ -57,7 +57,7 @@ export class FramedSocketSimulator {
    * @param buffer Buffer to fill with a test pattern
    */
   public static fillBufferWithTestPattern(buffer: Uint8Array): void {
-    let length = buffer.length;
+    const length = buffer.length;
 
     if (length === 0) {
       return;
@@ -87,7 +87,7 @@ export class FramedSocketSimulator {
    * @returns True if it matches; false if not
    */
   public static validateBufferTestPattern(buffer: Uint8Array): boolean {
-    let length = buffer.length;
+    const length = buffer.length;
 
     if (length === 0) {
       return true;
@@ -100,7 +100,7 @@ export class FramedSocketSimulator {
     }
 
     // The first four bytes contain the payload length
-    let validateLength = BinaryConverter.readInt32(buffer, 0);
+    const validateLength = BinaryConverter.readInt32(buffer, 0);
     if (length !== validateLength) {
       return false;
     }
@@ -142,17 +142,17 @@ class SocketSim implements IFramedSocket {
         return FramedSocketError.Closing;
       }
 
-      let frame = this._receiveQueue.queue.dequeue();
+      const frame = this._receiveQueue.queue.dequeue();
       if (frame) {
         // Simulate latency
-        let timeRemaining = frame.deliveryTime - this._time.getElapsedMilliseconds();
+        const timeRemaining = frame.deliveryTime - this._time.getElapsedMilliseconds();
         if (timeRemaining > 0) {
           await Task.delayAsync(timeRemaining);
         }
 
         // Simulate throughput
         if (this._throughput > 0) {
-          let throughputDelay = frame.payload.byteLength * 1000 / this._throughput;
+          const throughputDelay = frame.payload.byteLength * 1000 / this._throughput;
           if (throughputDelay > 0) {
             await Task.delayAsync(throughputDelay);
           }
@@ -176,7 +176,7 @@ class SocketSim implements IFramedSocket {
       return;
     }
 
-    let frame = new SimFrame();
+    const frame = new SimFrame();
     frame.payload = new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
     frame.deliveryTime = this._time.getElapsedMilliseconds() + this._latency;
 

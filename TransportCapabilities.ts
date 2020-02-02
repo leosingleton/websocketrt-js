@@ -7,14 +7,14 @@ export const enum TransportCapabilities1 {
 
   /**
    * The ability to negotiate capabilities
-   * 
+   *
    * Capabilities were first added in September 2018
    */
   Capabilities = 1,
 
   /**
    * Support for the message cancellation control frame (OpCode=0x12)
-   * 
+   *
    * Added September 2018
    */
   CancelMessage = 2,
@@ -71,7 +71,7 @@ export class TransportCapabilities {
 
   /** Returns an object representing a transport library with zero capabilites */
   public static getZeroCapabilities(): TransportCapabilities {
-    let result = new TransportCapabilities();
+    const result = new TransportCapabilities();
     result.majorVersion = 0;
     result.minorVersion = 0;
     result.capabilities1 = TransportCapabilities1.None;
@@ -80,7 +80,7 @@ export class TransportCapabilities {
 
   /** Returns the capabilities of this version of the transport library */
   public static getLocalCapabilties(): TransportCapabilities {
-    let result = new TransportCapabilities();
+    const result = new TransportCapabilities();
     result.majorVersion = 1;
     result.minorVersion = 1;
     result.capabilities1 = TransportCapabilities1.All;
@@ -94,11 +94,11 @@ export class TransportCapabilities {
    * @returns Resulting capability object
    */
   public static negotiate(caps1: TransportCapabilities, caps2: TransportCapabilities): TransportCapabilities {
-    let version = VersionComparer.lower(
+    const version = VersionComparer.lower(
       [caps1.majorVersion, caps1.minorVersion],
       [caps2.majorVersion, caps2.minorVersion]);
 
-    let result = new TransportCapabilities();
+    const result = new TransportCapabilities();
     result.capabilities1 = caps1.capabilities1 & caps2.capabilities1;
     result.majorVersion = version[0];
     result.minorVersion = version[1];

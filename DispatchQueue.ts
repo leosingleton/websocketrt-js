@@ -3,7 +3,7 @@ import { Queue } from '@leosingleton/commonlibs';
 
 /**
  * Thread-safe FIFO queue to dispatch messages from the transport layer
- * 
+ *
  * This looks a lot like ConcurrentQueue{T}, however that one doesn't
  * prevent insering the same message multiple times.
  */
@@ -17,7 +17,7 @@ export class DispatchQueue {
   }
 
   public dequeue(): Message {
-    let message = this._queue.dequeue();
+    const message = this._queue.dequeue();
     if (message) {
       this._set.delete(message);
       return message;

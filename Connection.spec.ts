@@ -3,11 +3,11 @@ import { AsyncManualResetEvent, Task } from '@leosingleton/commonlibs';
 import { ConnectionTestSimulator } from './ConnectionTestSimulator';
 import { MessageCallbackEvents } from './MessageCallbackHandler';
 
-describe("Connection", () => {
+describe('Connection', () => {
 
-  it("Runs a basic simulator to execute the transport code in a unit test environment", async () => {
+  it('Runs a basic simulator to execute the transport code in a unit test environment', async () => {
     // Zero latency, 1 GB/sec
-    let sim = new ConnectionTestSimulator(0, 1024 * 1024 * 1024);
+    const sim = new ConnectionTestSimulator(0, 1024 * 1024 * 1024);
     sim.beginDispatch();
 
     // Send 1 MB from c1 to c2
@@ -26,8 +26,8 @@ describe("Connection", () => {
 
   // Run the simulator, but timing to ensure the bandwidth estimation works somewhat accurately. Unfortunately,
   // due to unpredictable load on the build server, we have to be somewhat generous with the min/max values.
-  it("Timed Simulator", async () => {
-    let sim = new ConnectionTestSimulator(250, 257 * 1024);
+  it('Timed Simulator', async () => {
+    const sim = new ConnectionTestSimulator(250, 257 * 1024);
     sim.beginDispatch();
 
     // For more accurate timing, prime the connections with some data first to build up the bandwidth
@@ -58,11 +58,11 @@ describe("Connection", () => {
     sim.validateTestMessages();
   }, 45000);
 
-  it("Simulates a dropped connection and ensures both sides detect it via pings and close gracefully", async () => {
-    let sim = new ConnectionTestSimulator(251, 255 * 1024);
+  it('Simulates a dropped connection and ensures both sides detect it via pings and close gracefully', async () => {
+    const sim = new ConnectionTestSimulator(251, 255 * 1024);
     sim.dropMessages = true; // Drop all messages to simulate a dropped WebSocket
 
-    let onMessageReceived = (msg: Message, events: MessageCallbackEvents) => {
+    const onMessageReceived = (_msg: Message, _events: MessageCallbackEvents) => {
       expect(true).toBeFalsy('This callback should not be invoked during this test case');
     };
 
@@ -79,15 +79,15 @@ describe("Connection", () => {
     sim.validateTestMessages();
   }, 30000);
 
-  it("Registers callbacks and ensures we receive the expected callbacks", async () => {
-    let sim = new ConnectionTestSimulator(0, 1024 * 1024);
+  it('Registers callbacks and ensures we receive the expected callbacks', async () => {
+    const sim = new ConnectionTestSimulator(0, 1024 * 1024);
 
-    let isComplete = new AsyncManualResetEvent();
+    const isComplete = new AsyncManualResetEvent();
     let newMessageEvents = 0;
     let payloadReceivedEvents = 0;
     let completeEvents = 0;
 
-    let onMessageReceived = (msg: Message, events: MessageCallbackEvents) => {
+    const onMessageReceived = (msg: Message, events: MessageCallbackEvents) => {
       if ((events & MessageCallbackEvents.NewMessage) !== 0) {
         newMessageEvents++;
         msg.registerCallback(onMessageReceived, MessageCallbackEvents.PayloadReceived |
@@ -131,8 +131,8 @@ describe("Connection", () => {
     sim.validateTestMessages();
   }, 15000);
 
-  it("Ensures the transport layer can forward a message that has only been partially received", async () => {
-    let sim = new ConnectionTestSimulator(249, 255 * 1024);
+  it('Ensures the transport layer can forward a message that has only been partially received', async () => {
+    const sim = new ConnectionTestSimulator(249, 255 * 1024);
     const messageSize = 1026 * 1024;
 
     // When c2 receives the beginning of a message, start forwarding it back to c1
@@ -152,13 +152,13 @@ describe("Connection", () => {
     sim.validateTestMessages();
   }, 20000);
 
-  it("Tests message cancellation", async () => {
-    let sim = new ConnectionTestSimulator(252, 257 * 1024);
+  it('Tests message cancellation', async () => {
+    const sim = new ConnectionTestSimulator(252, 257 * 1024);
     sim.beginDispatch();
 
     // Send 1 MB from c1 to c2
     const messageSize = 1022 * 1024;
-    let message = await sim.connection1.sendTestMessage(messageSize);
+    const message = await sim.connection1.sendTestMessage(messageSize);
 
     // Cancel the message after 1 second
     await Task.delayAsync(1000);
@@ -184,9 +184,9 @@ describe("Connection", () => {
 
   // Ensures that if A sends a message to B and B forwards the message to C, if A cancels the message, the
   // cancellation automatically propagates to C
-  it("Cancel Propagation", async () => {
-    let simAB = new ConnectionTestSimulator(248, 255 * 1024);
-    let simBC = new ConnectionTestSimulator(252, 257 * 1024);
+  it('Cancel Propagation', async () => {
+    const simAB = new ConnectionTestSimulator(248, 255 * 1024);
+    const simBC = new ConnectionTestSimulator(252, 257 * 1024);
 
     // B forwards all messages from A to C
     ConnectionTestSimulator.forwardConnection(simAB.connection2, simBC.connection1);
@@ -195,7 +195,7 @@ describe("Connection", () => {
 
     // Send 1 MB from A to B
     const messageSize = 1025 * 1024;
-    let message = await simAB.connection1.sendTestMessage(messageSize);
+    const message = await simAB.connection1.sendTestMessage(messageSize);
 
     // Cancel the message after 1 second
     await Task.delayAsync(1000);

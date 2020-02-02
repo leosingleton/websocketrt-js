@@ -103,7 +103,7 @@ export class Connection {
 
       // Cancel all messages in the process of being received
       for (let n = 0; n < this._receivedMessages.length; n++) {
-        let message = this._receivedMessages[n];
+        const message = this._receivedMessages[n];
         if (message) {
           this.cancelReceivedMessage(n);
         }
@@ -127,7 +127,7 @@ export class Connection {
 
   /**
    * Wrapper around an async worker loop to catch any unhandled exceptions, log them, and terminate the connection
-   * @param promise Promise returned by an async loop 
+   * @param promise Promise returned by an async loop
    */
   private _loopExceptionWrapper(promise: Promise<void>): void {
     promise.catch((err: Error) => {
@@ -139,7 +139,7 @@ export class Connection {
   private async _receiveLoop(): Promise<void> {
     // When we receive a control frame, it contains information about the upcoming data frames, which is stored
     // in this FIFO queue.
-    let expectedDataFrames = new Queue<DataFrameControl>();
+    const expectedDataFrames = new Queue<DataFrameControl>();
 
     // Timer used to estimate inbound throughput
     let receiveTimer: Stopwatch;
@@ -155,8 +155,8 @@ export class Connection {
         expectedDataFrame = expectedDataFrames.dequeue();
 
         // We are expecting a data frame
-        let buffer = this._receivedMessages[expectedDataFrame.messageNumber].getPayload();
-        let offset = expectedDataFrame.offset;
+        const buffer = this._receivedMessages[expectedDataFrame.messageNumber].getPayload();
+        const offset = expectedDataFrame.offset;
         segment = new DataView(buffer.buffer, offset, buffer.byteLength - offset);
       } else {
         // We are expecting a control frame
@@ -164,7 +164,7 @@ export class Connection {
       }
 
       // Receive a frame from the WebSocket
-      let bytes = await this._socket.receiveFrameAsync(segment);
+      const bytes = await this._socket.receiveFrameAsync(segment);
       if (bytes === -1) {
         this.forceClose('WebSocket closed by remote side');
         return;
@@ -189,16 +189,16 @@ export class Connection {
         if (expectedDataFrames.getCount() === 0) {
           // This was the last data frame in the group of frames. Calculate the estimate.
           receiveTimer.stopTimer();
-          let elapsedMilliseconds = receiveTimer.getElapsedMilliseconds();
+          const elapsedMilliseconds = receiveTimer.getElapsedMilliseconds();
           if (bytesReceived > this._config.singlePacketMtu && elapsedMilliseconds > 0) {
-            let estimate = bytesReceived * 1000 / elapsedMilliseconds;
+            const estimate = bytesReceived * 1000 / elapsedMilliseconds;
             this._inboundThroughputEstimate.record(estimate);
           }
         }
 
         // We received part of a message. Send it to the dispatch loop. We don't want to process it on this
         // thread, as doing so could reduce our receive throughput.
-        let message = this._receivedMessages[expectedDataFrame.messageNumber];
+        const message = this._receivedMessages[expectedDataFrame.messageNumber];
         message._bytesReceived += bytes;
 
         this._dispatchQueue.enqueue(message);
@@ -216,7 +216,7 @@ export class Connection {
         // Process a control frame
         //
 
-        let controlFrame = new ControlFrame();
+        const controlFrame = new ControlFrame();
         controlFrame.read(segment);
 
         if (controlFrame.opCode === 0x00) {
@@ -229,7 +229,7 @@ export class Connection {
               !this._capabilitiesSent) {
             this._sendCapabilities = true;
             this._dataToSendEvent.setEvent();
-          }          
+          }
         } else if (controlFrame.opCode >= 0x01 && controlFrame.opCode <= 0x0f) {
           // Prepare for subsequent data frames
 
@@ -240,12 +240,12 @@ export class Connection {
           receiveTimer.startTimer();
           bytesReceived = 0;
 
-          let dataFrames = controlFrame.data as DataFrameControl[];
+          const dataFrames = controlFrame.data as DataFrameControl[];
           for (let n = 0; n < controlFrame.opCode; n++) {
-            let dataFrame = dataFrames[n];
+            const dataFrame = dataFrames[n];
 
             if (dataFrame.isFirst) {
-              let msg = new Message(dataFrame.length, false);
+              const msg = new Message(dataFrame.length, false);
               msg._setHeader(dataFrame.header);
               this._receivedMessages[dataFrame.messageNumber] = msg;
               this._receivedMessagesCount++;
@@ -259,7 +259,7 @@ export class Connection {
           this._pongEvent.setEvent();
         } else if (controlFrame.opCode === 0x11) {
           // Received a Pong. Use this to update our RTT estimate.
-          let timer = this._pingResponseTimer; this._pingResponseTimer = null;
+          const timer = this._pingResponseTimer; this._pingResponseTimer = null;
           if (timer) {
             timer.stopTimer();
             this._localRttEstimate.record(timer.getElapsedMilliseconds());
@@ -268,7 +268,7 @@ export class Connection {
           this._missedPingCount = 0;
         } else if (controlFrame.opCode === 0x12) {
           // Cancel messages in progress
-          let cancellationDetails = controlFrame.data as MessageCancelControl;
+          const cancellationDetails = controlFrame.data as MessageCancelControl;
           this.cancelReceivedMessages(cancellationDetails.messageNumbers);
         }
 
@@ -318,7 +318,7 @@ export class Connection {
     // the message cancel events have been sent out to avoid getting into a weird state. Waiting for
     // _ReceivedMessageCount to hit zero covers this case.
     while (!this._isClosing.getIsSet() || this._receivedMessagesCount > 0) {
-      let message = this._dispatchQueue.dequeue();
+      const message = this._dispatchQueue.dequeue();
       if (message) {
         // First, execute the message-level callbacks
         message._executeCallbacks();
@@ -344,7 +344,7 @@ export class Connection {
    * @returns Returns an OutgoingMessage object. This object is read-only, but can be used to track the
    *    progress of the send operation. It can also be passed to cancel(OutgoingMessage) to abort the
    *    send before completion.
-   * 
+   *
    * This call blocks until the message is successfully queued, however it returns before the message is
    * actually sent. TransportConfig.MaxConcurrentMessages controls how many messages can be queued
    * at a time. If this number is hit, this method will block.
@@ -369,17 +369,17 @@ export class Connection {
       }
     }
 
-    let messageOut = new OutgoingMessage(messageNumber, message, priority, header);
+    const messageOut = new OutgoingMessage(messageNumber, message, priority, header);
 
     if (!message.isComplete()) {
       // If we are forwarding a message before it is fully-received, register a callback with it to ensure we
       // signal the _DataToSendEvent whenever additional payload data is available
-      message.registerCallback((msg: Message, events: MessageCallbackEvents) => {
+      message.registerCallback((_msg: Message, _events: MessageCallbackEvents) => {
         this._dataToSendEvent.setEvent();
       }, MessageCallbackEvents.PayloadReceived);
 
       // Likewise, if the receiving message gets cancelled, cancel the outgoing copy too
-      message.registerCallback((msg: Message, events: MessageCallbackEvents) => {
+      message.registerCallback((_msg: Message, _events: MessageCallbackEvents) => {
         this.cancel(messageOut);
       }, MessageCallbackEvents.Cancelled);
     }
@@ -392,10 +392,10 @@ export class Connection {
 
   /**
    * Cancels a message before completion.
-   * 
+   *
    * Note that this operation is fully asynchronous, so it is possible the message completes sending and is
    * never cancelled.
-   * 
+   *
    * @param message Message to cancel
    */
   public cancel(message: OutgoingMessage): void {
@@ -405,7 +405,7 @@ export class Connection {
 
   private async _sendLoop(): Promise<void> {
     // dataFrames contains the control data for the outgoing frames we will send
-    let dataFrames = new Queue<DataFrameControl>();
+    const dataFrames = new Queue<DataFrameControl>();
 
     // resetBytesRemainingEvent is used as the timer to throttle outgoing traffic
     let resetBytesRemainingEvent: AsyncEventWaitHandle = new AsyncManualResetEvent(true);
@@ -449,7 +449,7 @@ export class Connection {
           this.sendControlFrame(0x10);
 
           // Measure the amount of time until we receive a Pong
-          let timer = new Stopwatch();
+          const timer = new Stopwatch();
           timer.startTimer();
           this._pingResponseTimer = timer;
           this._pingCount++;
@@ -471,7 +471,7 @@ export class Connection {
         }
 
         // Randomize the interval by +/- 50%
-        let randomizedInterval = interval + (interval / 2) - (Math.random() * interval);
+        const randomizedInterval = interval + (interval / 2) - (Math.random() * interval);
 
         // Reset the ping timer
         pingEvent = new AsyncTimerEvent(randomizedInterval);
@@ -479,15 +479,15 @@ export class Connection {
 
       // Get the outgoing messages to send
       while (bytesRemaining > 0 && dataFrames.getCount() < 15) {
-        let next = this._sendQueue.getNext(bytesRemaining);
-        let message = next.message;
-        let frameLength = next.bytesToSend;
+        const next = this._sendQueue.getNext(bytesRemaining);
+        const message = next.message;
+        const frameLength = next.bytesToSend;
         if (!message) {
           // There are no more messages with data ready to send
           break;
         }
 
-        let dataFrame = new DataFrameControl();
+        const dataFrame = new DataFrameControl();
         dataFrame.offset = message.getBytesSent();
         dataFrame.length = message.message.getPayload().length;
         dataFrame.messageNumber = message.messageNumber;
@@ -509,7 +509,7 @@ export class Connection {
 
         // Send the data frames
         while (dataFrames.getCount() > 0) {
-          let dataFrame = dataFrames.dequeue();
+          const dataFrame = dataFrames.dequeue();
 
           // If this is the last frame of a message, we can return the message number to the queue for
           // reuse by another message
@@ -523,7 +523,7 @@ export class Connection {
           this._bytesOut += dataFrame.frameLength;
         }
       }
-      
+
       if (bytesRemaining > 0) {
         // Block until there are new messages, pings, or pongs to send
         await AsyncEventWaitHandle.whenAny([this._dataToSendEvent, pingEvent, this._pongEvent, this._isClosing]);
@@ -543,7 +543,7 @@ export class Connection {
     let msgNumbers = 0;
     let message: OutgoingMessage;
 
-    while (message = this._outgoingMessagesToCancel.dequeue()) {
+    while ((message = this._outgoingMessagesToCancel.dequeue())) {
       if (await this.cancelOutgoingMessage(message)) {
         msgNumbers |= (1 << message.messageNumber);
       }
@@ -551,7 +551,7 @@ export class Connection {
 
     // Send a message to cancel message numbers
     if (msgNumbers !== 0) {
-      let cancel = new MessageCancelControl();
+      const cancel = new MessageCancelControl();
       cancel.messageNumbers = msgNumbers;
       await this.sendControlFrame(0x12, cancel);
     }
@@ -598,12 +598,12 @@ export class Connection {
   private async sendControlFrame(opCode: number, data?: TransportCapabilities | DataFrameControl[] |
       MessageCancelControl): Promise<void> {
     // Build a control frame
-    let controlFrame = new ControlFrame();
+    const controlFrame = new ControlFrame();
     controlFrame.opCode = opCode;
     controlFrame.rttEstimate = this._localRttEstimate.getValue();
     controlFrame.throughputEstimate = this._inboundThroughputEstimate.getValue();
     controlFrame.data = data;
-    let controlFrameBytes = controlFrame.write();
+    const controlFrameBytes = controlFrame.write();
 
     // Send the control frame
     await this._socket.sendFrameAsync(controlFrameBytes);
@@ -736,7 +736,7 @@ export class Connection {
    * layer on the other side might have a different configuration value than we do.
    */
   private _receivedMessages: Message[];
-  
+
   /**
    * Number of non-null values in the _receivedMessages array
    */
@@ -763,7 +763,7 @@ export class Connection {
    * This is a collection of outgoing messages that should be cancelled. Cancellation occurs when the sender
    * decides to stop sending a message, which most commonly occurs when forwarding a message, and the incoming
    * connection dies before the message is fully received.
-   * 
+   *
    * To wake the send loop, signal _dataToSendEvent after adding messages to the queue.
    */
   private _outgoingMessagesToCancel: Queue<OutgoingMessage>;

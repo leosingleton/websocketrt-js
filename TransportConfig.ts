@@ -1,4 +1,4 @@
-/** 
+/**
  * Configuration options for the transport layer
  */
 export class TransportConfig {
@@ -46,7 +46,7 @@ export class TransportConfig {
   /**
    * Number of consecutive ping intervals that can be missed (because the remote side didn't repond with a pong),
    * before the connection is closed.
-   * 
+   *
    * Effectively, the connection has a timeout of pingInterval * missedPingCount = 60 seconds.
    */
   public missedPingCount = 4;

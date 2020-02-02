@@ -58,7 +58,7 @@ export class ConnectionTestSimulator extends FramedSocketSimulator {
    */
   public static forwardConnection(srcConnection: SimulatedConnection, destConnection: SimulatedConnection,
       notComplete = true) {
-    srcConnection.registerCallback((msg: Message, events: MessageCallbackEvents) => {
+    srcConnection.registerCallback((msg: Message, _events: MessageCallbackEvents) => {
       if (notComplete) {
         expect(msg.isComplete()).toBeFalsy();
       }
@@ -75,7 +75,7 @@ export class SimulatedConnection extends Connection {
   public constructor(socket: IFramedSocket, connectionName: string) {
     super(socket, null, connectionName);
 
-    this.registerCallback((message: Message, events: MessageCallbackEvents) => {
+    this.registerCallback((message: Message, _events: MessageCallbackEvents) => {
       // We can't do asserts here, because it's not the main XUnit thread, so store the message and
       // header. The unit test can validate it later by calling ValidateTestMessages().
       this.messages.enqueue(message);
@@ -85,11 +85,11 @@ export class SimulatedConnection extends Connection {
       this._messageReceivedEvent.setEvent();
     });
 
-    this.registerCallback((message: Message, events: MessageCallbackEvents) => {
+    this.registerCallback((_message: Message, _events: MessageCallbackEvents) => {
       this._newMessages++;
     }, MessageCallbackEvents.NewMessage);
 
-    this.registerCallback((message: Message, events: MessageCallbackEvents) => {
+    this.registerCallback((_message: Message, _events: MessageCallbackEvents) => {
       this._cancelledMessages++;
     }, MessageCallbackEvents.Cancelled);
   }
@@ -134,9 +134,9 @@ export class SimulatedConnection extends Connection {
    * @returns OutgoingMessage which can be used to cancel or monitor progress
    */
   public sendTestMessage(bytes: number, priority = 0): Promise<OutgoingMessage> {
-    let message = new Message(bytes);
+    const message = new Message(bytes);
     FramedSocketSimulator.fillBufferWithTestPattern(message.getPayload());
-    let header = new Uint8Array(bytes % 61); // 64 byte max
+    const header = new Uint8Array(bytes % 61); // 64 byte max
     FramedSocketSimulator.fillBufferWithTestPattern(header);
     return this.send(message, priority, header);
   }
@@ -150,8 +150,8 @@ export class SimulatedConnection extends Connection {
    */
   public async expectTestMessages(messageCount: number, bytes: number, minMilliseconds: number,
       maxMilliseconds: number): Promise<void> {
-    let oneSecondTimer = new AsyncTimerEvent(1000, true);
-    let start = Stopwatch.startNew();
+    const oneSecondTimer = new AsyncTimerEvent(1000, true);
+    const start = Stopwatch.startNew();
     let elapsed = 0;
 
     do {
@@ -179,7 +179,7 @@ export class SimulatedConnection extends Connection {
    */
   public validateTestMessages(): void {
     let message: Message;
-    while (message = this.messages.dequeue()) {
+    while ((message = this.messages.dequeue())) {
       expect(message).toBeDefined();
       expect(FramedSocketSimulator.validateBufferTestPattern(message.getPayload())).toBeTruthy();
       expect(message.getHeader()).toBeDefined();

@@ -1,6 +1,6 @@
 import { MessageCallback, MessageCallbackHandler, MessageCallbackEvents } from './MessageCallbackHandler';
 
-/** 
+/**
  * Holds one complete message. Messages are broken up into one or more frames while in transport.
  */
 export class Message {
@@ -82,16 +82,16 @@ export class Message {
   /** Reads the payload property as a JSON object */
   public getPayloadAsJson(): any {
     // Unpack the server's message
-    let payloadString: string = String.fromCharCode.apply(null, this._payload);
+    const payloadString: string = String.fromCharCode.apply(null, this._payload);
     return JSON.parse(payloadString);
   }
 
   /** Writes the JSON notation for an object into the payload property */
   public setPayloadAsJson(obj: any): void {
-    let payloadString = JSON.stringify(obj);
+    const payloadString = JSON.stringify(obj);
 
     // TODO: This part can probably be optimized. See: http://code.google.com/p/stringencoding/
-    let payloadLength = payloadString.length;
+    const payloadLength = payloadString.length;
     this._payload = new Uint8Array(payloadString.length);
     for (let n = 0; n < payloadLength; n++) {
       this._payload[n] = payloadString.charCodeAt(n);

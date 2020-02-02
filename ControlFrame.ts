@@ -1,7 +1,7 @@
 import { BinaryConverter } from '@leosingleton/commonlibs';
 import { TransportCapabilities } from './TransportCapabilities';
 
-/** 
+/**
  * Frames sent over the WebSocket are either data frames containing payload or control frames, which are used for
  * the transport layers on each side to communicate control information. This class serializes and deserializes
  * control frames.
@@ -30,10 +30,10 @@ export class ControlFrame {
 
   /**
    * If OpCode is 0x00, the remainder of the control frame contains the capabilities of the transport library.
-   * 
+   *
    * If OpCode is 0x01-0x0f, additional control information about the data frames is here. The payloads for
    * these will be sent as separate frames immediately following the control frame.
-   * 
+   *
    * If OpCode is 0x12, the remainder of the control frame contains details about which message numbers to.
    */
   public data: TransportCapabilities | DataFrameControl[] | MessageCancelControl;
@@ -41,7 +41,7 @@ export class ControlFrame {
   public constructor() {}
 
   public read(frame: DataView): void {
-    let opCode = frame.getUint8(0);
+    const opCode = frame.getUint8(0);
     this.opCode = opCode;
     this.rttEstimate = frame.getUint16(2, false);
     this.throughputEstimate = frame.getInt32(4, false);
@@ -63,22 +63,22 @@ export class ControlFrame {
   }
 
   public write(): DataView {
-    let frame = new Uint8Array(ControlFrame.maxLength);
+    const frame = new Uint8Array(ControlFrame.maxLength);
     frame[0] = this.opCode;
     BinaryConverter.writeUInt16(frame, 2, this.rttEstimate);
     BinaryConverter.writeInt32(frame, 4, this.throughputEstimate);
 
     let offset = 8;
     if (this.opCode === 0x00) {
-      let data = this.data as TransportCapabilities;
+      const data = this.data as TransportCapabilities;
       offset += data.write(frame, offset);
     } else if (this.opCode >= 0x01 && this.opCode <= 0x0f) {
-      let data = this.data as DataFrameControl[];
-      for (let n = 0; n < data.length; n++) {
-        offset += data[n].write(frame, offset);
+      const data = this.data as DataFrameControl[];
+      for (const d of data) {
+        offset += d.write(frame, offset);
       }
     } else if (this.opCode === 0x12) {
-      let data = this.data as MessageCancelControl;
+      const data = this.data as MessageCancelControl;
       offset += data.write(frame, offset);
     }
 
@@ -126,7 +126,7 @@ export class DataFrameControl {
 
   /**
    * Payload of the message.
-   * 
+   *
    * Warning: This field is not serialized to the control frame. It is only used internally by the SendLoop to
    * track the data to send.
    */
@@ -134,7 +134,7 @@ export class DataFrameControl {
 
   /**
    * Length of the outgoing frame.
-   * 
+   *
    * Warning: This field is not serialized to the control frame. It is only used internally by the SendLoop to
    * track the data to send.
    */
@@ -153,7 +153,7 @@ export class DataFrameControl {
 
     // The header length lives in the upper 6 bits of Length
     this.length = BinaryConverter.readInt32(frame, startIndex + 4);
-    let headerLength = (this.length & 0xfc000000) >>> 26;
+    const headerLength = (this.length & 0xfc000000) >>> 26;
     this.length &= 0x03ffffff;
 
     // Copy the header
@@ -173,7 +173,7 @@ export class DataFrameControl {
     offset |= (this.isLast ? 1 : 0) << 26;
     BinaryConverter.writeInt32(frame, startIndex, offset);
 
-    let headerLength = this.header ? this.header.length : 0;
+    const headerLength = this.header ? this.header.length : 0;
 
     // The header length lives in the upper 6 bits of Length
     let length = this.length & 0x03ffffff;
