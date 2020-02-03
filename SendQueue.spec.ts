@@ -37,11 +37,11 @@ describe('SendQueue', () => {
     let messageNumber = 0;
     const priorities = [ 1, 2, 3, 3, 3, 15 ];
     const messages: OutgoingMessage[] = [];
-    priorities.forEach(priority => {
+    for (const priority of priorities) {
       const message = new OutgoingMessage(messageNumber, new Message(100), priority);
       queue.enqueue(message);
       messages[messageNumber++] = message;
-    });
+    }
 
     // Cancel message 0. Message 1 will be returned next.
     queue.cancel(messages[0]);

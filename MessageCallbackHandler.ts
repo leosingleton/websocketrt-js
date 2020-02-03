@@ -57,12 +57,12 @@ export class MessageCallbackHandler {
   public executeCallbacks(message: Message, events: MessageCallbackEvents): number {
     let count = 0;
 
-    this._callbacks.forEach(pair => {
+    for (const pair of this._callbacks) {
       if ((pair.events & events) !== 0) {
         pair.callback(message, events);
         count++;
       }
-    });
+    }
 
     return count;
   }
