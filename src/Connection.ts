@@ -360,7 +360,7 @@ export class Connection {
 
     if (this._isClosing.getIsSet()) {
       // Stop sending data if the socket is closed
-      return;
+      return undefined;
     }
 
     // Get a message number. We may have to block waiting for one to become available if we have exceeded the
@@ -369,7 +369,7 @@ export class Connection {
     while ((messageNumber = this._sendMessageNumbers.dequeue()) === undefined) {
       await AsyncEventWaitHandle.whenAny([this._messageNumberEvent, this._isClosing]);
       if (this._isClosing.getIsSet()) {
-        return;
+        return undefined;
       }
     }
 
