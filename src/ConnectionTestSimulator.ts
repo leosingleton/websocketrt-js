@@ -177,6 +177,8 @@ export class SimulatedConnection extends Connection {
         return;
       }
     } while (elapsed < maxMilliseconds);
+
+    oneSecondTimer.dispose();
   }
 
   /**
