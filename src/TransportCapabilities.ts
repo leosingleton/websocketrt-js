@@ -14,20 +14,20 @@ export const enum TransportCapabilities1 {
    *
    * Capabilities were first added in September 2018
    */
-  Capabilities = 1,
+  Capabilities = (1 << 0),
 
   /**
    * Support for the message cancellation control frame (OpCode=0x12)
    *
    * Added September 2018
    */
-  CancelMessage = 2,
+  CancelMessage = (1 << 1),
 
   /**
    * The highest bit is reserved for when we run out of capabilities bits and have to add a
    * TransportCapabilities2 enum.
    */
-  Capabilities2 = 2147483647,
+  Capabilities2 = (1 << 31),
 
   /** All */
   All = Capabilities | CancelMessage

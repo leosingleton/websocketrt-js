@@ -20,7 +20,7 @@ describe('TransportCapabilties', () => {
     const caps3 = TransportCapabilities.negotiate(caps1, caps2);
     expect(caps3.majorVersion).toEqual(2);
     expect(caps3.minorVersion).toEqual(5);
-    expect(caps3.capabilities1).toEqual(TransportCapabilities1.Capabilities);
+    expect(caps3.capabilities1 | 0).toEqual(TransportCapabilities1.Capabilities); // "| 0" to force signed 32-bit
   });
 
 });
