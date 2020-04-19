@@ -20,7 +20,7 @@ module.exports = {
   coverageReporters: ['cobertura', 'text'],
   globals: {
     'ts-jest': {
-      tsConfig: 'tsconfig.jest.json'
+      tsConfig: 'tsconfig.all.json'
     }
   }
 };
