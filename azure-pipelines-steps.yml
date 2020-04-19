@@ -1,0 +1,47 @@
+# WebSocketRT: Real-time websocket library
+# Copyright (c) Leo C. Singleton IV <leo@leosingleton.com>
+# See LICENSE in the project root for license information.
+
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '10.x'
+    displayName: 'Install Node.js 10'
+
+  - script: |
+      npm install
+    displayName: 'Install NPM Packages'
+
+  - script: |
+      npm run lint
+    displayName: 'Lint'
+
+  - script: |
+      npm run build
+    displayName: 'Compile Output'
+
+  - script: |
+      npm run test
+    displayName: 'Execute Unit Tests'
+    continueOnError: true
+
+  - task: PublishTestResults@2
+    inputs:
+      testResultsFormat: 'JUnit'
+      testResultsFiles: 'build/results-*.xml'
+
+  - task: PublishCodeCoverageResults@1
+    inputs:
+      codeCoverageTool: 'cobertura'
+      summaryFileLocation: 'build/cobertura-coverage.xml'
+      reportDirectory: 'build/'
+
+  - task: CopyFiles@2
+    inputs:
+      sourceFolder: '$(Build.SourcesDirectory)'
+      contents: |
+        **/**
+        !**/node_modules/**
+      targetFolder: '$(Build.ArtifactStagingDirectory)'
+
+  - task: PublishBuildArtifacts@1
