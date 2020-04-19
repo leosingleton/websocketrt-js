@@ -1,3 +1,7 @@
+// WebSocketRT: Real-time websocket library
+// Copyright (c) Leo C. Singleton IV <leo@leosingleton.com>
+// See LICENSE in the project root for license information.
+
 /**
  * Abstraction for a WebSocket-like transport that supports framing. By supporting this generic interface, we can
  * easily mock WebSockets and simulate the whiteboard transport offline.

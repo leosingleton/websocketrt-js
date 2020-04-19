@@ -1,3 +1,7 @@
+// WebSocketRT: Real-time websocket library
+// Copyright (c) Leo C. Singleton IV <leo@leosingleton.com>
+// See LICENSE in the project root for license information.
+
 import { Message } from './Message';
 import { Queue } from '@leosingleton/commonlibs';
 

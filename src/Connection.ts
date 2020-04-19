@@ -1,3 +1,7 @@
+// WebSocketRT: Real-time websocket library
+// Copyright (c) Leo C. Singleton IV <leo@leosingleton.com>
+// See LICENSE in the project root for license information.
+
 import { ControlFrame, DataFrameControl, MessageCancelControl } from './ControlFrame';
 import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncManualResetEvent, AsyncTimerEvent, MovingAverage, Queue,
   Stopwatch } from '@leosingleton/commonlibs';
