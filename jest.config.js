@@ -5,7 +5,7 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  roots: ['<rootDir>/packages/'],
+  roots: ['<rootDir>/src/'],
   testMatch: ['**/__tests__/**/*.(test|node).ts'],
   reporters: [
     'default',
