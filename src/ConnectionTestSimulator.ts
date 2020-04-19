@@ -8,7 +8,7 @@ import { IFramedSocket } from './IFramedSocket';
 import { Message } from './Message';
 import { MessageCallbackEvents } from './MessageCallbackHandler';
 import { OutgoingMessage } from './OutgoingMessage';
-import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncTimerEvent, Queue, Stopwatch, Task } from
+import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncTimerEvent, Queue, Stopwatch, Task, usingAsync } from
   '@leosingleton/commonlibs';
 
 /**
@@ -156,29 +156,28 @@ export class SimulatedConnection extends Connection {
    */
   public async expectTestMessages(messageCount: number, bytes: number, minMilliseconds: number,
       maxMilliseconds: number): Promise<void> {
-    const oneSecondTimer = new AsyncTimerEvent(1000, true);
-    const start = Stopwatch.startNew();
-    let elapsed = 0;
+    await usingAsync(new AsyncTimerEvent(1000, true), async oneSecondTimer => {
+      const start = Stopwatch.startNew();
+      let elapsed = 0;
 
-    do {
-      // Wait for a message, or wake every 1 second
-      await AsyncEventWaitHandle.whenAny([this._messageReceivedEvent, oneSecondTimer]);
-      elapsed = start.getElapsedMilliseconds();
+      do {
+        // Wait for a message, or wake every 1 second
+        await AsyncEventWaitHandle.whenAny([this._messageReceivedEvent, oneSecondTimer]);
+        elapsed = start.getElapsedMilliseconds();
 
-      if (this._messagesReceived >= messageCount || this._messageBytesReceived >= bytes) {
-        expect(this._messagesReceived).toEqual(messageCount);
-        expect(this._messageBytesReceived).toEqual(bytes);
-        expect(elapsed).toBeGreaterThanOrEqual(minMilliseconds);
-        expect(elapsed).toBeLessThanOrEqual(maxMilliseconds);
+        if (this._messagesReceived >= messageCount || this._messageBytesReceived >= bytes) {
+          expect(this._messagesReceived).toEqual(messageCount);
+          expect(this._messageBytesReceived).toEqual(bytes);
+          expect(elapsed).toBeGreaterThanOrEqual(minMilliseconds);
+          expect(elapsed).toBeLessThanOrEqual(maxMilliseconds);
 
-        // Success. Reset counters for future calls.
-        this._messagesReceived = 0;
-        this._messageBytesReceived = 0;
-        return;
-      }
-    } while (elapsed < maxMilliseconds);
-
-    oneSecondTimer.dispose();
+          // Success. Reset counters for future calls.
+          this._messagesReceived = 0;
+          this._messageBytesReceived = 0;
+          return;
+        }
+      } while (elapsed < maxMilliseconds);
+    });
   }
 
   /**
