@@ -2,9 +2,9 @@
 // Copyright (c) Leo C. Singleton IV <leo@leosingleton.com>
 // See LICENSE in the project root for license information.
 
-import { Message } from './Message';
-import { SendQueue } from './SendQueue';
-import { OutgoingMessage } from './OutgoingMessage';
+import { Message } from '../Message';
+import { OutgoingMessage } from '../OutgoingMessage';
+import { SendQueue } from '../SendQueue';
 
 describe('SendQueue', () => {
 

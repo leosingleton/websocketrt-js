@@ -3,16 +3,16 @@
 // See LICENSE in the project root for license information.
 
 import { ControlFrame, DataFrameControl, MessageCancelControl } from './ControlFrame';
-import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncManualResetEvent, AsyncTimerEvent, MovingAverage, Queue,
-  Stopwatch } from '@leosingleton/commonlibs';
+import { DispatchQueue } from './DispatchQueue';
 import { IFramedSocket } from './IFramedSocket';
 import { Message } from './Message';
-import { SendQueue } from './SendQueue';
-import { TransportConfig } from './TransportConfig';
+import { MessageCallback, MessageCallbackEvents, MessageCallbackHandler } from './MessageCallbackHandler';
 import { OutgoingMessage } from './OutgoingMessage';
+import { SendQueue } from './SendQueue';
 import { TransportCapabilities, TransportCapabilities1 } from './TransportCapabilities';
-import { MessageCallbackHandler, MessageCallbackEvents, MessageCallback } from './MessageCallbackHandler';
-import { DispatchQueue } from './DispatchQueue';
+import { TransportConfig } from './TransportConfig';
+import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncManualResetEvent, AsyncTimerEvent, MovingAverage, Queue,
+  Stopwatch } from '@leosingleton/commonlibs';
 
 export class Connection {
   /**

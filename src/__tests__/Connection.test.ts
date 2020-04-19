@@ -2,10 +2,10 @@
 // Copyright (c) Leo C. Singleton IV <leo@leosingleton.com>
 // See LICENSE in the project root for license information.
 
-import { Message } from './Message';
+import { ConnectionTestSimulator } from '../ConnectionTestSimulator';
+import { MessageCallbackEvents } from '../MessageCallbackHandler';
+import { Message } from '../Message';
 import { AsyncManualResetEvent, Task } from '@leosingleton/commonlibs';
-import { ConnectionTestSimulator } from './ConnectionTestSimulator';
-import { MessageCallbackEvents } from './MessageCallbackHandler';
 
 describe('Connection', () => {
 
@@ -67,7 +67,7 @@ describe('Connection', () => {
     sim.dropMessages = true; // Drop all messages to simulate a dropped WebSocket
 
     const onMessageReceived = (_msg: Message, _events: MessageCallbackEvents) => {
-      expect(true).toBeFalsy('This callback should not be invoked during this test case');
+      expect(true).toBeFalsy(); // This callback should not be invoked during this test case
     };
 
     sim.connection1.registerCallback(onMessageReceived);

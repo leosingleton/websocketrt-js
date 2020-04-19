@@ -2,8 +2,8 @@
 // Copyright (c) Leo C. Singleton IV <leo@leosingleton.com>
 // See LICENSE in the project root for license information.
 
-import { Queue } from '@leosingleton/commonlibs';
 import { OutgoingMessage } from './OutgoingMessage';
+import { Queue } from '@leosingleton/commonlibs';
 
 /**
  * Priority queue used to store outgoing messages

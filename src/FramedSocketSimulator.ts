@@ -2,7 +2,7 @@
 // Copyright (c) Leo C. Singleton IV <leo@leosingleton.com>
 // See LICENSE in the project root for license information.
 
-import { IFramedSocket, FramedSocketError } from './IFramedSocket';
+import { FramedSocketError, IFramedSocket } from './IFramedSocket';
 import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncManualResetEvent, BinaryConverter, Queue,
   Stopwatch, Task } from '@leosingleton/commonlibs';
 

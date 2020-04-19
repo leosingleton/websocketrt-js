@@ -2,7 +2,7 @@
 // Copyright (c) Leo C. Singleton IV <leo@leosingleton.com>
 // See LICENSE in the project root for license information.
 
-import { TransportCapabilities, TransportCapabilities1 } from './TransportCapabilities';
+import { TransportCapabilities, TransportCapabilities1 } from '../TransportCapabilities';
 
 describe('TransportCapabilties', () => {
 

@@ -2,7 +2,7 @@
 // Copyright (c) Leo C. Singleton IV <leo@leosingleton.com>
 // See LICENSE in the project root for license information.
 
-import { MessageCallback, MessageCallbackHandler, MessageCallbackEvents } from './MessageCallbackHandler';
+import { MessageCallback, MessageCallbackEvents, MessageCallbackHandler } from './MessageCallbackHandler';
 
 /**
  * Holds one complete message. Messages are broken up into one or more frames while in transport.

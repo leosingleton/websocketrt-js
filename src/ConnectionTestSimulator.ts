@@ -2,13 +2,13 @@
 // Copyright (c) Leo C. Singleton IV <leo@leosingleton.com>
 // See LICENSE in the project root for license information.
 
-import { FramedSocketSimulator } from './FramedSocketSimulator';
 import { Connection } from './Connection';
+import { FramedSocketSimulator } from './FramedSocketSimulator';
 import { IFramedSocket } from './IFramedSocket';
-import { MessageCallbackEvents } from './MessageCallbackHandler';
 import { Message } from './Message';
+import { MessageCallbackEvents } from './MessageCallbackHandler';
 import { OutgoingMessage } from './OutgoingMessage';
-import { AsyncAutoResetEvent, AsyncTimerEvent, AsyncEventWaitHandle, Queue, Stopwatch, Task } from
+import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncTimerEvent, Queue, Stopwatch, Task } from
   '@leosingleton/commonlibs';
 
 /**

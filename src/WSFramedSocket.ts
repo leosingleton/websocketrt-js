@@ -2,8 +2,8 @@
 // Copyright (c) Leo C. Singleton IV <leo@leosingleton.com>
 // See LICENSE in the project root for license information.
 
-import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncManualResetEvent, Queue } from '@leosingleton/commonlibs';
 import { FramedSocketError, IFramedSocket } from './IFramedSocket';
+import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncManualResetEvent, Queue } from '@leosingleton/commonlibs';
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 

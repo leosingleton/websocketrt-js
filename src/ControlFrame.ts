@@ -2,8 +2,8 @@
 // Copyright (c) Leo C. Singleton IV <leo@leosingleton.com>
 // See LICENSE in the project root for license information.
 
-import { BinaryConverter } from '@leosingleton/commonlibs';
 import { TransportCapabilities } from './TransportCapabilities';
+import { BinaryConverter } from '@leosingleton/commonlibs';
 
 /**
  * Frames sent over the WebSocket are either data frames containing payload or control frames, which are used for
