@@ -9,6 +9,10 @@
     "sourceMap": true,
 
     "noImplicitAny": true,
-    "noImplicitReturns": true
-  }
+    //"noImplicitReturns": true,
+
+    "rootDir": "src",
+    "outDir": "build"
+  },
+  "exclude": ["**/__tests__/*", "**/build/*"]
 }
