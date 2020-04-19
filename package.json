@@ -2,7 +2,7 @@
   "name": "websocketrt",
   "version": "0.0.1",
   "author": "Leo C. Singleton IV <leo@leosingleton.com>",
-  "description": "WebsocketRT: Real-time websocket library",
+  "description": "WebSocketRT: Real-time websocket library",
   "homepage": "https://github.com/leosingleton/websocketrt-js",
   "license": "MIT",
   "private": true,
