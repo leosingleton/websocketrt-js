@@ -4,16 +4,10 @@
  * Released under the MIT license
  */
 
-import { Connection } from './Connection';
-import { IFramedSocket } from './IFramedSocket';
-import { Message } from './Message';
-import { TransportConfig } from './TransportConfig';
-import { WSFramedSocket } from './WSFramedSocket';
-
-export {
-  Connection,
-  IFramedSocket,
-  Message,
-  TransportConfig,
-  WSFramedSocket
-};
+export { Connection } from './Connection';
+export { IFramedSocket } from './IFramedSocket';
+export { Message } from './Message';
+export { MessageCallback, MessageCallbackEvents } from './MessageCallbackHandler';
+export { TransportCapabilities, TransportCapabilities1 } from './TransportCapabilities';
+export { TransportConfig } from './TransportConfig';
+export { WSFramedSocket } from './WSFramedSocket';
