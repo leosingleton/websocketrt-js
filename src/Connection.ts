@@ -160,7 +160,7 @@ export class Connection {
 
         // We are expecting a data frame
         const buffer = this._receivedMessages[expectedDataFrame.messageNumber].getPayload();
-        const offset = expectedDataFrame.offset;
+        const offset = expectedDataFrame.dataOffset;
         segment = new DataView(buffer.buffer, offset, buffer.byteLength - offset);
       } else {
         // We are expecting a control frame
@@ -221,12 +221,12 @@ export class Connection {
         //
 
         const controlFrame = new ControlFrame();
-        controlFrame.read(segment);
+        controlFrame.readFrame(segment);
 
         if (controlFrame.opCode === 0x00) {
           // Received a capabilities message. Compute the intersection of the two libraries.
           this._negotiatedCapabilities = TransportCapabilities.negotiate(TransportCapabilities.getLocalCapabilties(),
-            controlFrame.data as TransportCapabilities);
+            controlFrame.frameData as TransportCapabilities);
 
           // If we did not send a capabilities message yet, and the other end handles it, send one
           if ((this._negotiatedCapabilities.capabilities1 & TransportCapabilities1.Capabilities) !== 0 &&
@@ -244,12 +244,12 @@ export class Connection {
           receiveTimer.startTimer();
           bytesReceived = 0;
 
-          const dataFrames = controlFrame.data as DataFrameControl[];
+          const dataFrames = controlFrame.frameData as DataFrameControl[];
           for (let n = 0; n < controlFrame.opCode; n++) {
             const dataFrame = dataFrames[n];
 
             if (dataFrame.isFirst) {
-              const msg = new Message(dataFrame.length, false);
+              const msg = new Message(dataFrame.messageLength, false);
               msg._setHeader(dataFrame.header);
               this._receivedMessages[dataFrame.messageNumber] = msg;
               this._receivedMessagesCount++;
@@ -272,7 +272,7 @@ export class Connection {
           this._missedPingCount = 0;
         } else if (controlFrame.opCode === 0x12) {
           // Cancel messages in progress
-          const cancellationDetails = controlFrame.data as MessageCancelControl;
+          const cancellationDetails = controlFrame.frameData as MessageCancelControl;
           this.cancelReceivedMessages(cancellationDetails.messageNumbers);
         }
 
@@ -353,7 +353,7 @@ export class Connection {
    * actually sent. TransportConfig.MaxConcurrentMessages controls how many messages can be queued
    * at a time. If this number is hit, this method will block.
    */
-  public async send(message: Message, priority: number, header?: Uint8Array): Promise<OutgoingMessage> {
+  public async sendMessageAsync(message: Message, priority: number, header?: Uint8Array): Promise<OutgoingMessage> {
     if (priority >= this._config.priorityLevels) {
       throw new Error('Priority ' + priority + 'exceeds max');
     }
@@ -384,7 +384,7 @@ export class Connection {
 
       // Likewise, if the receiving message gets cancelled, cancel the outgoing copy too
       message.registerCallback((_msg: Message, _events: MessageCallbackEvents) => {
-        this.cancel(messageOut);
+        this.cancelMessage(messageOut);
       }, MessageCallbackEvents.Cancelled);
     }
 
@@ -402,7 +402,7 @@ export class Connection {
    *
    * @param message Message to cancel
    */
-  public cancel(message: OutgoingMessage): void {
+  public cancelMessage(message: OutgoingMessage): void {
     this._outgoingMessagesToCancel.enqueue(message);
     this._dataToSendEvent.setEvent();
   }
@@ -484,7 +484,7 @@ export class Connection {
       // Get the outgoing messages to send
       while (bytesRemaining > 0 && dataFrames.getCount() < 15) {
         const next = this._sendQueue.getNext(bytesRemaining);
-        const message = next.message;
+        const message = next.messageContents;
         const frameLength = next.bytesToSend;
         if (!message) {
           // There are no more messages with data ready to send
@@ -492,12 +492,12 @@ export class Connection {
         }
 
         const dataFrame = new DataFrameControl();
-        dataFrame.offset = message.getBytesSent();
-        dataFrame.length = message.message.getPayload().length;
+        dataFrame.dataOffset = message.getBytesSent();
+        dataFrame.messageLength = message.messageContents.getPayload().length;
         dataFrame.messageNumber = message.messageNumber;
         dataFrame.isFirst = message.getBytesSent() === 0;
         dataFrame.isLast = message.getBytesRemaining() === frameLength;
-        dataFrame.payload = message.message.getPayload();
+        dataFrame.messagePayload = message.messageContents.getPayload();
         dataFrame.frameLength = frameLength;
         dataFrame.header = message.header;
         dataFrames.enqueue(dataFrame);
@@ -523,7 +523,8 @@ export class Connection {
           }
 
           // Send the actual data
-          this._socket.sendFrameAsync(new DataView(dataFrame.payload.buffer, dataFrame.offset, dataFrame.frameLength));
+          this._socket.sendFrameAsync(new DataView(dataFrame.messagePayload.buffer, dataFrame.dataOffset,
+            dataFrame.frameLength));
           this._bytesOut += dataFrame.frameLength;
         }
       }
@@ -606,8 +607,8 @@ export class Connection {
     controlFrame.opCode = opCode;
     controlFrame.rttEstimate = this._localRttEstimate.getValue();
     controlFrame.throughputEstimate = this._inboundThroughputEstimate.getValue();
-    controlFrame.data = data;
-    const controlFrameBytes = controlFrame.write();
+    controlFrame.frameData = data;
+    const controlFrameBytes = controlFrame.writeFrame();
 
     // Send the control frame
     await this._socket.sendFrameAsync(controlFrameBytes);

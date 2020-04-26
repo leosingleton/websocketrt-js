@@ -6,13 +6,13 @@ import { Message } from './Message';
 
 /**
  * Object that wraps a Message as it is being sent. Returned by
- * Connection.Send as a way to monitor the message's progress or cancel it
+ * `Connection.sendMessageAsync` as a way to monitor the message's progress or cancel it
  * before completion.
  */
 export class OutgoingMessage {
   public constructor(messageNumber: number, message: Message, priority: number, header?: Uint8Array) {
     this.messageNumber = messageNumber;
-    this.message = message;
+    this.messageContents = message;
     this.priority = priority;
     this.header = header;
   }
@@ -21,7 +21,7 @@ export class OutgoingMessage {
   public readonly messageNumber: number;
 
   /** Message being sent */
-  public readonly message: Message;
+  public readonly messageContents: Message;
 
   /** Message priority (0 = highest) */
   public readonly priority: number;
@@ -42,7 +42,7 @@ export class OutgoingMessage {
 
   /** Bytes remaining until the end of the message. See note on bytesReady. */
   public getBytesRemaining(): number {
-    return this.message.getPayload().length - this._bytesSent;
+    return this.messageContents.getPayload().length - this._bytesSent;
   }
 
   /**
@@ -51,6 +51,6 @@ export class OutgoingMessage {
    + received and downwards as that data is forwarded.
    */
   public getBytesReady(): number {
-    return this.message.getBytesReceived() - this._bytesSent;
+    return this.messageContents.getBytesReceived() - this._bytesSent;
   }
 }

@@ -53,7 +53,7 @@ export class TransportCapabilities {
    * @param startIndex Offset within the byte array to begin reading
    * @returns Number of bytes read
    */
-  public read(frame: Uint8Array, startIndex: number): number {
+  public readCapabilities(frame: Uint8Array, startIndex: number): number {
     this.majorVersion = BinaryConverter.readUInt16(frame, startIndex);
     this.minorVersion = BinaryConverter.readUInt16(frame, startIndex + 2);
     this.capabilities1 = BinaryConverter.readInt32(frame, startIndex + 4);
@@ -66,7 +66,7 @@ export class TransportCapabilities {
    * @param startIndex Offset within the byte array to begin writing
    * @returns Number of bytes written
    */
-  public write(frame: Uint8Array, startIndex: number): number {
+  public writeCapabilities(frame: Uint8Array, startIndex: number): number {
     BinaryConverter.writeUInt16(frame, startIndex, this.majorVersion);
     BinaryConverter.writeUInt16(frame, startIndex + 2, this.minorVersion);
     BinaryConverter.writeInt32(frame, startIndex + 4, this.capabilities1);
