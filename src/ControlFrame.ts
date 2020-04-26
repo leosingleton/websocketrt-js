@@ -13,17 +13,15 @@ import { BinaryConverter } from '@leosingleton/commonlibs';
 export class ControlFrame {
   /**
    * Operation Code:
-   *  0x00 = Capabilities Negotiation
-   *  0x01 - 0x0f = Send Data Frames (value = # of data frames)
-   *  0x10 = Ping
-   *  0x11 = Pong
-   *  0x12 = Cancel Messages
+   * - `0x00` = Capabilities Negotiation
+   * - `0x01` - `0x0f` = Send Data Frames (value = # of data frames)
+   * - `0x10` = Ping
+   * - `0x11` = Pong
+   * - `0x12` = Cancel Messages
    */
   public opCode: number;
 
-  /**
-   * Current estimated RTT, in milliseconds
-   */
+  /** Current estimated RTT, in milliseconds */
   public rttEstimate: number;
 
   /**
@@ -33,12 +31,12 @@ export class ControlFrame {
   public throughputEstimate: number;
 
   /**
-   * If OpCode is 0x00, the remainder of the control frame contains the capabilities of the transport library.
+   * If OpCode is `0x00`, the remainder of the control frame contains the capabilities of the transport library.
    *
-   * If OpCode is 0x01-0x0f, additional control information about the data frames is here. The payloads for
+   * If OpCode is `0x01`-`0x0f`, additional control information about the data frames is here. The payloads for
    * these will be sent as separate frames immediately following the control frame.
    *
-   * If OpCode is 0x12, the remainder of the control frame contains details about which message numbers to.
+   * If OpCode is `0x12`, the remainder of the control frame contains details about which message numbers to.
    */
   public frameData: TransportCapabilities | DataFrameControl[] | MessageCancelControl;
 
@@ -89,43 +87,33 @@ export class ControlFrame {
     return new DataView(frame.buffer, 0, offset);
   }
 
-  /**
-   * Maximum size of a control frame, in bytes
-   */
+  /** Maximum size of a control frame, in bytes */
   public static readonly maxLength = 8 + (15 * 72);
 }
 
 export class DataFrameControl {
-  /**
-   * Offset of the data within the message (max 64 MB)
-   */
+  /** Offset of the data within the message (max 64 MB) */
   public dataOffset: number;
 
-  /**
-   * Length of the total message (max 64 MB)
-   */
+  /** Length of the total message (max 64 MB) */
   public messageLength: number;
 
-  /**
-   * Identifies which of the messages in flight (0-15) this data payload is for
-   */
+  /** Identifies which of the messages in flight (0-15) this data payload is for */
   public messageNumber: number;
 
   /**
-   * If true, this is the first data frame for the message. Any partial data previously received for this
+   * If `true`, this is the first data frame for the message. Any partial data previously received for this
    * message number should be discarded.
    */
   public isFirst: boolean;
 
   /**
-   * If true, this is the last data frame for the message. The complete message can now be delivered to the
+   * If `true`, this is the last data frame for the message. The complete message can now be delivered to the
    * upper protocol layers.
    */
   public isLast: boolean;
 
-  /**
-   * Each data frame can include a header (max 64 bytes) in the control frame
-   */
+  /** Each data frame can include a header (max 64 bytes) in the control frame */
   public header: Uint8Array;
 
   /**
@@ -191,7 +179,7 @@ export class DataFrameControl {
   }
 }
 
-/** Additional details on the cancel OpCode (0x12) */
+/** Additional details on the cancel OpCode (`0x12`) */
 export class MessageCancelControl {
   /** Bitmask of message numbers to cancel */
   public messageNumbers: number;

@@ -2,9 +2,7 @@
 // Copyright (c) Leo C. Singleton IV <leo@leosingleton.com>
 // See LICENSE in the project root for license information.
 
-/**
- * Configuration options for the transport layer
- */
+/** Configuration options for WebSocketRT */
 export class TransportConfig {
   /**
    * Number of priority levels we support (maximum 16). More levels gives the higher layer greater control over
@@ -18,7 +16,7 @@ export class TransportConfig {
   public singlePacketMtu = 1398;
 
   /**
-   * The number of concurrent messages that can be in-flight (maximum 16) before <see cref="Connection.Send"/>
+   * The number of concurrent messages that can be in-flight (maximum 16) before `Connection.SendMessageAsync`
    * blocks and begins throttling the sender.
    */
   public maxConcurrentMessages = 16;
@@ -37,21 +35,17 @@ export class TransportConfig {
    */
   public bandwidthEstimatorSamples = 100;
 
-  /**
-   * Interval between pings, in milliseconds.
-   */
+  /** Interval between pings, in milliseconds. */
   public pingInterval = 15000;
 
-  /**
-   * At startup, we temporarily increase the ping frequency to help the RTT and throughput estimates converge.
-   */
+  /** At startup, we temporarily increase the ping frequency to help the RTT and throughput estimates converge. */
   public initialPingInterval = 5000;
 
   /**
    * Number of consecutive ping intervals that can be missed (because the remote side didn't repond with a pong),
    * before the connection is closed.
    *
-   * Effectively, the connection has a timeout of pingInterval * missedPingCount = 60 seconds.
+   * Effectively, the connection has a timeout of `pingInterval * missedPingCount` = 60 seconds.
    */
   public missedPingCount = 4;
 

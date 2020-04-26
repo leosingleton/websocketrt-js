@@ -5,9 +5,7 @@
 import { OutgoingMessage } from './OutgoingMessage';
 import { Queue } from '@leosingleton/commonlibs';
 
-/**
- * Priority queue used to store outgoing messages
- */
+/** Priority queue used to store outgoing messages */
 export class SendQueue {
   public constructor(priorityLevels: number) {
     this._messageQueues = new Array<Queue<OutgoingMessage>>(priorityLevels);
@@ -31,11 +29,11 @@ export class SendQueue {
    * Gets the next outgoing message from the queue
    * @param maxBytes Maximum bytes the transport layer can send. If the next message is less than or equal to this
    *    number of bytes, it is removed from the queue. Otherwise, it remains at the head.
-   * @returns messageContents Returns the next outgoing message or null if none remain
-   * @returns bytesToSend Number of bytes to send. This may be less than the maxBytes parameter supplied if the highest
-   *    priority message has less available payload. Returns 0 if there are no messages to send.
+   * @returns messageContents Returns the next outgoing message or `null` if none remain
+   * @returns bytesToSend Number of bytes to send. This may be less than the `maxBytes` parameter supplied if the
+   *    highest priority message has less available payload. Returns 0 if there are no messages to send.
    */
-  public getNext(maxBytes: number): {messageContents: OutgoingMessage, bytesToSend: number} {
+  public getNext(maxBytes: number): { messageContents: OutgoingMessage, bytesToSend: number } {
     let priority = this._highestPriority;
 
     while (priority < this._messageQueues.length) {
@@ -117,8 +115,6 @@ export class SendQueue {
    */
   private _messageQueues: Queue<OutgoingMessage>[];
 
-  /**
-   * Highest priority level that currently has a message queued
-   */
+  /** Highest priority level that currently has a message queued */
   private _highestPriority = 0;
 }

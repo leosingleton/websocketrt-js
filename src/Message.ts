@@ -4,16 +4,14 @@
 
 import { MessageCallback, MessageCallbackEvents, MessageCallbackHandler } from './MessageCallbackHandler';
 
-/**
- * Holds one complete message. Messages are broken up into one or more frames while in transport.
- */
+/** Holds one complete message. Messages are broken up into one or more frames while in transport. */
 export class Message {
   /**
    * Constructor (Unlike the C# implementation, which has two overloaded constructors, TypeScript uses a union type to
    * implement both as a single constructor)
-   * @param payloadLength Optional payload length. If set, a buffer will be automatically created for Payload.
-   *    For outgoing messages, the caller may also pass in a Uint8Array containing payload data.
-   * @param outgoing True for outgoing messages; false for incoming
+   * @param payloadLength Optional payload length. If set, a buffer will be automatically created for `payload`.
+   *    For outgoing messages, the caller may also pass in a `Uint8Array` containing payload data.
+   * @param outgoing `true` for outgoing messages; `false` for incoming
    */
   public constructor(payload?: Uint8Array | number, outgoing = true) {
     this.outgoing = outgoing;
@@ -29,12 +27,10 @@ export class Message {
     }
   }
 
-  /** True for outgoing messages; false for incoming */
+  /** `true` for outgoing messages; `false` for incoming */
   public readonly outgoing: boolean;
 
-  /**
-   * Optional header (64 bytes max)
-   */
+  /** Optional header (64 bytes max) */
   public getHeader(): Uint8Array {
     return this._header;
   }
@@ -54,7 +50,7 @@ export class Message {
 
   /**
    * Payload data. Note that the size of the array is the expected length, not the actual length received.
-   * Always check getBytesReceived() for the actual number received so far, and don't read past that
+   * Always check `getBytesReceived()` for the actual number received so far, and don't read past that
    * point in this array.
    */
   public getPayload(): Uint8Array {
@@ -70,12 +66,12 @@ export class Message {
   /** Internal. Do not access outside the transport layer. */
   public _bytesReceived = 0;
 
-  /** True if the payload has been fully received; false otherwise */
+  /** `true` if the payload has been fully received; `false` otherwise */
   public isComplete(): boolean {
     return this._payload.length === this.getBytesReceived();
   }
 
-  /** True if the message has been cancelled and will never complete */
+  /** `true` if the message has been cancelled and will never complete */
   public isCancelled(): boolean {
     return this._isCancelled;
   }
@@ -128,7 +124,7 @@ export class Message {
 
   /**
    * Internal. Invoked from the dispatch loop to execute registered callbacks.
-   * @param callbacks Collection of registered callbacks. If null, the callbacks registered to this particular message
+   * @param callbacks Collection of registered callbacks. If `null`, the callbacks registered to this particular message
    *    are executed.
    * @returns Number of callback functions executed
    */

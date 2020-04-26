@@ -77,7 +77,7 @@ export class Connection {
 
   /**
    * Registers a callback to be executed on message events. These callbacks are invoked for all messages. For
-   * more granular callbacks, register on the Message object itself.
+   * more granular callbacks, register on the `Message` object itself.
    * @param callback Callback function
    * @param events Events that trigger the callback
    */
@@ -87,7 +87,7 @@ export class Connection {
 
   /**
    * Begins the dispatch loop. This must be called once all callbacks are registered using
-   * registerCallback().
+   * `registerCallback()`.
    */
   public beginDispatch(): void {
     this._loopExceptionWrapper(this._dispatchLoop());
@@ -344,13 +344,13 @@ export class Connection {
    * @param priority Priority (0 = highest)
    * @param header Optional header (max 64 bytes). This value is used instead of the header value in the message
    *    parameter on outgoing messages, which enables forwarding the payload while rewriting the header. The default
-   *    value is no header. To forward the header as-is, set this value to message.Header.
-   * @returns Returns an OutgoingMessage object. This object is read-only, but can be used to track the
-   *    progress of the send operation. It can also be passed to cancel(OutgoingMessage) to abort the
+   *    value is no header. To forward the header as-is, set this value to `message.Header`.
+   * @returns Returns an `OutgoingMessage` object. This object is read-only, but can be used to track the
+   *    progress of the send operation. It can also be passed to `cancel(OutgoingMessage)` to abort the
    *    send before completion.
    *
    * This call blocks until the message is successfully queued, however it returns before the message is
-   * actually sent. TransportConfig.MaxConcurrentMessages controls how many messages can be queued
+   * actually sent. `TransportConfig.maxConcurrentMessages` controls how many messages can be queued
    * at a time. If this number is hit, this method will block.
    */
   public async sendMessageAsync(message: Message, priority: number, header?: Uint8Array): Promise<OutgoingMessage> {
@@ -541,7 +541,7 @@ export class Connection {
   }
 
   /**
-   * Internal helper function to process the _outgoingMessagesToCancel collection. This function
+   * Internal helper function to process the `_outgoingMessagesToCancel` collection. This function
    * must be executed on the send thread to avoid race conditions.
    */
   private async cancelOutgoingMessages(): Promise<void> {
@@ -563,7 +563,7 @@ export class Connection {
   }
 
   /**
-   * Internel helper function to do the work of Cancel(OutgoingMessage)
+   * Internel helper function to do the work of `cancel(OutgoingMessage)`
    * @param message Message to cancel
    * @returns True if the message was successfully cancelled; false if it was unable to be cancelled
    */
@@ -598,7 +598,7 @@ export class Connection {
   /**
    * Creates and sends a control frame
    * @param opCode Operation code of the control frame
-   * @param data Additional data depending on opCode
+   * @param data Additional data depending on `opCode`
    */
   private async sendControlFrame(opCode: number, data?: TransportCapabilities | DataFrameControl[] |
       MessageCancelControl): Promise<void> {
@@ -621,7 +621,7 @@ export class Connection {
     this._capabilitiesSent = true;
   }
 
-  /** Set after sendCapabilities() is called */
+  /** Set after `sendCapabilities()` is called */
   private _capabilitiesSent = false;
 
   /** Transport library version and capabilities negotiated with the remote side */
@@ -645,9 +645,7 @@ export class Connection {
   }
   private _bytesOut = 0;
 
-  /**
-   * Estimated Round-Trip Time, in milliseconds
-   */
+  /** Estimated Round-Trip Time, in milliseconds */
   public getRttEstimate(): number {
     // RTT should always the same in each direction, but is sometimes inaccurate due to server and network load adding
     // additional latency. For a more accurate measurement, both sides independently calculate the RTT value and share
@@ -655,60 +653,42 @@ export class Connection {
     return Math.min(this._localRttEstimate.getValue(), this._remoteRttEstimate);
   }
 
-  /**
-   * Estimate RTT calculated by ourselves
-   */
+  /** Estimated RTT calculated by ourselves */
   private _localRttEstimate: MovingAverage;
 
-  /**
-   * Estimated RTT calculated by the other side
-   */
+  /** Estimated RTT calculated by the other side */
   private _remoteRttEstimate: number;
 
-  /**
-   * Estimated throughput of the outbound connection, in bytes/sec
-   */
+  /** Estimated throughput of the outbound connection, in bytes/sec */
   public getOutboundThroughputEstimate(): number {
     return this._outboundThroughputEstimate;
   }
   private _outboundThroughputEstimate: number;
 
-  /**
-   * Estimated throughput of the inbound connection, in bytes/sec
-   */
+  /** Estimated throughput of the inbound connection, in bytes/sec */
   public getInboundThroughputEstimate(): number {
     return this._inboundThroughputEstimate.getValue();
   }
 
-  /**
-   * Moving average used to calculate the inbound throughput estimate
-   */
+  /** Moving average used to calculate the inbound throughput estimate */
   private _inboundThroughputEstimate: MovingAverage;
 
-  /**
-   * Measures the interval between sending a Ping and receiving a Pong. This is used to calculate RTT.
-   */
+  /** Measures the interval between sending a `Ping` and receiving a `Pong`. This is used to calculate RTT. */
   private _pingResponseTimer: Stopwatch;
 
-  /**
-   * Number of pings sent
-   */
+  /** Number of pings sent */
   private _pingCount = 0;
 
   /**
    * Number of consecutive pings that were not sent, because the previous was still waiting for a pong response.
-   * If this hits TransportConfig.missedPingCount, the connection is closed.
+   * If this hits `TransportConfig.missedPingCount`, the connection is closed.
    */
   private _missedPingCount = 0;
 
-  /**
-   * Name string for debugging
-   */
+  /*** Name string for debugging */
   private _connectionName: string;
 
-  /**
-   * The WebSocket itself for the underlying connection
-   */
+  /** The WebSocket itself for the underlying connection */
   private _socket: IFramedSocket;
 
   /**
@@ -717,51 +697,39 @@ export class Connection {
    */
   private _callbacks: MessageCallbackHandler;
 
-  /**
-   * Configuration settings for the transport library
-   */
+  /** Configuration settings for the transport library */
   private _config: TransportConfig;
 
-  /**
-   * Event used to signal when the connection is closing
-   */
+  /** Event used to signal when the connection is closing */
   public getIsClosing(): AsyncManualResetEvent {
     return this._isClosing;
   }
   private _isClosing: AsyncManualResetEvent;
 
-  /**
-   * String describing the reason for closing the connection
-   */
+  /** String describing the reason for closing the connection */
   private _closeReason: string;
 
   /**
    * Array of messages partially received. The index is the message number, limited by
-   * TransportConfig.MaxConcurrentMessages, however we always assume 16 because the transport
+   * `TransportConfig.maxConcurrentMessages`, however we always assume 16 because the transport
    * layer on the other side might have a different configuration value than we do.
    */
   private _receivedMessages: Message[];
 
-  /**
-   * Number of non-null values in the _receivedMessages array
-   */
+  /** Number of non-null values in the `_receivedMessages` array */
   private _receivedMessagesCount = 0;
 
   /**
    * Messages are dispatched from a separate dispatch loop to avoid holding up the receive loop. This queue
-   * contains the messages with events for it to dispatch. Signal _dispatchEvent to wake up the
+   * contains the messages with events for it to dispatch. Signal `_dispatchEvent` to wake up the
    * loop after adding a message here.
    */
   private _dispatchQueue: DispatchQueue;
 
-  /**
-   * Event set when a new item is added to _dispatchQueue
-   */
+  /** Event set when a new item is added to `_dispatchQueue` */
   private _dispatchEvent: AsyncAutoResetEvent;
 
-  /**
-   * Prioritized queue of outgoing messages
-   */
+  /** Prioritized queue of outgoing messages */
   private _sendQueue: SendQueue;
 
   /**
@@ -769,23 +737,17 @@ export class Connection {
    * decides to stop sending a message, which most commonly occurs when forwarding a message, and the incoming
    * connection dies before the message is fully received.
    *
-   * To wake the send loop, signal _dataToSendEvent after adding messages to the queue.
+   * To wake the send loop, signal `_dataToSendEvent` after adding messages to the queue.
    */
   private _outgoingMessagesToCancel: Queue<OutgoingMessage>;
 
-  /**
-   * Set whenever we have data available for the send loop
-   */
+  /** Set whenever we have data available for the send loop */
   private _dataToSendEvent: AsyncAutoResetEvent;
 
-  /**
-   * Set whenever we need to send a Pong in response to a Ping
-   */
+  /** Set whenever we need to send a `Pong` in response to a `Ping` */
   private _sendPong: boolean;
 
-  /**
-   * Set whenever we need to send a Pong in response to a Ping
-   */
+  /** Set whenever we need to send a `Pong` in response to a `Ping` */
   private _pongEvent: AsyncAutoResetEvent;
 
   /**
@@ -795,8 +757,6 @@ export class Connection {
    */
   private _sendMessageNumbers: Queue<number>;
 
-  /**
-   * Event set whenever a message number is returned to the queue making it available for reuse
-   */
+  /** Event set whenever a message number is returned to the queue making it available for reuse */
   private _messageNumberEvent: AsyncAutoResetEvent;
 }

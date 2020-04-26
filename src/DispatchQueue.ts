@@ -8,7 +8,7 @@ import { Queue } from '@leosingleton/commonlibs';
 /**
  * Thread-safe FIFO queue to dispatch messages from the transport layer
  *
- * This looks a lot like ConcurrentQueue{T}, however that one doesn't
+ * This looks a lot like `ConcurrentQueue{T}`, however that one doesn't
  * prevent insering the same message multiple times.
  */
 export class DispatchQueue {
