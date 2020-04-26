@@ -44,7 +44,7 @@ export class ControlFrame {
 
   public constructor() {}
 
-  public read(frame: DataView): void {
+  public readFrame(frame: DataView): void {
     const opCode = frame.getUint8(0);
     this.opCode = opCode;
     this.rttEstimate = frame.getUint16(2, false);
@@ -53,12 +53,12 @@ export class ControlFrame {
     let offset = 8;
     if (opCode === 0x00) {
       this.data = new TransportCapabilities();
-      offset += this.data.read(new Uint8Array(frame.buffer), frame.byteOffset + offset);
+      offset += this.data.readCapabilities(new Uint8Array(frame.buffer), frame.byteOffset + offset);
     } else if (opCode >= 0x01 && opCode <= 0x0f) {
       this.data = new Array<DataFrameControl>(opCode);
       for (let n = 0; n < opCode; n++) {
         this.data[n] = new DataFrameControl();
-        offset += this.data[n].read(new Uint8Array(frame.buffer), frame.byteOffset + offset);
+        offset += this.data[n].readFrame(new Uint8Array(frame.buffer), frame.byteOffset + offset);
       }
     } else if (opCode === 0x12) {
       this.data = new MessageCancelControl();
@@ -66,7 +66,7 @@ export class ControlFrame {
     }
   }
 
-  public write(): DataView {
+  public writeFrame(): DataView {
     const frame = new Uint8Array(ControlFrame.maxLength);
     frame[0] = this.opCode;
     BinaryConverter.writeUInt16(frame, 2, this.rttEstimate);
@@ -75,11 +75,11 @@ export class ControlFrame {
     let offset = 8;
     if (this.opCode === 0x00) {
       const data = this.data as TransportCapabilities;
-      offset += data.write(frame, offset);
+      offset += data.writeCapabilities(frame, offset);
     } else if (this.opCode >= 0x01 && this.opCode <= 0x0f) {
       const data = this.data as DataFrameControl[];
       for (const d of data) {
-        offset += d.write(frame, offset);
+        offset += d.writeFrame(frame, offset);
       }
     } else if (this.opCode === 0x12) {
       const data = this.data as MessageCancelControl;
@@ -99,12 +99,12 @@ export class DataFrameControl {
   /**
    * Offset of the data within the message (max 64 MB)
    */
-  public offset: number;
+  public dataOffset: number;
 
   /**
    * Length of the total message (max 64 MB)
    */
-  public length: number;
+  public messageLength: number;
 
   /**
    * Identifies which of the messages in flight (0-15) this data payload is for
@@ -134,7 +134,7 @@ export class DataFrameControl {
    * Warning: This field is not serialized to the control frame. It is only used internally by the SendLoop to
    * track the data to send.
    */
-  public payload: Uint8Array;
+  public messagePayload: Uint8Array;
 
   /**
    * Length of the outgoing frame.
@@ -146,19 +146,19 @@ export class DataFrameControl {
 
   public constructor() {}
 
-  public read(frame: Uint8Array, startIndex: number): number {
+  public readFrame(frame: Uint8Array, startIndex: number): number {
     // MessageNumber lives in the upper 4 bits of Offset. IsFirst lives in the 5th-higest bit if Length.
     // IsLast lives in the 6th-highest.
-    this.offset = BinaryConverter.readInt32(frame, startIndex);
-    this.messageNumber = (this.offset & 0xf0000000) >>> 28;
-    this.isFirst = (this.offset & 0x08000000) !== 0;
-    this.isLast = (this.offset & 0x04000000) !== 0;
-    this.offset &= 0x03ffffff;
+    this.dataOffset = BinaryConverter.readInt32(frame, startIndex);
+    this.messageNumber = (this.dataOffset & 0xf0000000) >>> 28;
+    this.isFirst = (this.dataOffset & 0x08000000) !== 0;
+    this.isLast = (this.dataOffset & 0x04000000) !== 0;
+    this.dataOffset &= 0x03ffffff;
 
     // The header length lives in the upper 6 bits of Length
-    this.length = BinaryConverter.readInt32(frame, startIndex + 4);
-    const headerLength = (this.length & 0xfc000000) >>> 26;
-    this.length &= 0x03ffffff;
+    this.messageLength = BinaryConverter.readInt32(frame, startIndex + 4);
+    const headerLength = (this.messageLength & 0xfc000000) >>> 26;
+    this.messageLength &= 0x03ffffff;
 
     // Copy the header
     if (headerLength > 0) {
@@ -168,10 +168,10 @@ export class DataFrameControl {
     return headerLength + 8;
   }
 
-  public write(frame: Uint8Array, startIndex: number): number {
+  public writeFrame(frame: Uint8Array, startIndex: number): number {
     // MessageNumber lives in the upper 4 bits of Offset. IsFirst lives in the 5th-higest bit if Length.
     // IsLast lives in the 6th-highest.
-    let offset = this.offset & 0x03ffffff;
+    let offset = this.dataOffset & 0x03ffffff;
     offset |= (this.messageNumber & 0xf) << 28;
     offset |= (this.isFirst ? 1 : 0) << 27;
     offset |= (this.isLast ? 1 : 0) << 26;
@@ -180,7 +180,7 @@ export class DataFrameControl {
     const headerLength = this.header ? this.header.length : 0;
 
     // The header length lives in the upper 6 bits of Length
-    let length = this.length & 0x03ffffff;
+    let length = this.messageLength & 0x03ffffff;
     if (headerLength > 0) {
       length |= (headerLength & 0x3f) << 26;
       frame.set(this.header, startIndex + 8);

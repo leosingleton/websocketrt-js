@@ -68,7 +68,7 @@ export class ConnectionTestSimulator extends FramedSocketSimulator {
       }
 
       Task.runAsyncVoid(async () => {
-        await destConnection.send(msg, 0, msg.getHeader());
+        await destConnection.sendMessageAsync(msg, 0, msg.getHeader());
       });
     }, MessageCallbackEvents.NewMessage);
   }
@@ -144,7 +144,7 @@ export class SimulatedConnection extends Connection {
     FramedSocketSimulator.fillBufferWithTestPattern(message.getPayload());
     const header = new Uint8Array(bytes % 61); // 64 byte max
     FramedSocketSimulator.fillBufferWithTestPattern(header);
-    return this.send(message, priority, header);
+    return this.sendMessageAsync(message, priority, header);
   }
 
   /**

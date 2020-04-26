@@ -18,19 +18,19 @@ describe('SendQueue', () => {
 
     // message2 should be returned first, as it is higher priority
     const result1 = queue.getNext(100);
-    expect(result1.message).toEqual(message2);
+    expect(result1.messageContents).toEqual(message2);
     expect(result1.bytesToSend).toEqual(100);
-    result1.message._bytesSent += result1.bytesToSend;
+    result1.messageContents._bytesSent += result1.bytesToSend;
 
     // message1 should be returned next
     const result2 = queue.getNext(100);
-    expect(result2.message).toEqual(message1);
+    expect(result2.messageContents).toEqual(message1);
     expect(result2.bytesToSend).toEqual(100);
-    result2.message._bytesSent += result2.bytesToSend;
+    result2.messageContents._bytesSent += result2.bytesToSend;
 
     // null should be returned, as there are no more messages
     const result3 = queue.getNext(100);
-    expect(result3.message).toBeNull();
+    expect(result3.messageContents).toBeNull();
     expect(result3.bytesToSend).toEqual(0);
   });
 
@@ -50,21 +50,21 @@ describe('SendQueue', () => {
     // Cancel message 0. Message 1 will be returned next.
     queue.cancel(messages[0]);
     const next = queue.getNext(100);
-    expect(next.message.messageNumber).toEqual(1);
+    expect(next.messageContents.messageNumber).toEqual(1);
 
     // Cancel message 2. Message 3 will be returned next.
     queue.cancel(messages[2]);
     const next2 = queue.getNext(100);
-    expect(next2.message.messageNumber).toEqual(3);
+    expect(next2.messageContents.messageNumber).toEqual(3);
 
     // Cancel message 5. Message 4 will be returned next.
     queue.cancel(messages[5]);
     const next3 = queue.getNext(100);
-    expect(next3.message.messageNumber).toEqual(4);
+    expect(next3.messageContents.messageNumber).toEqual(4);
 
     // The queue is now empty.
     const next4 = queue.getNext(100);
-    expect(next4.message).toBeNull();
+    expect(next4.messageContents).toBeNull();
   });
 
   // This repros a bug from Oct 2018 where enqueue() was not updating the _highestPriority value
@@ -77,26 +77,26 @@ describe('SendQueue', () => {
     // Send the lower-priority, and read only half of it
     queue.enqueue(message2);
     const next = queue.getNext(100);
-    expect(next.message.messageNumber).toEqual(1);
+    expect(next.messageContents.messageNumber).toEqual(1);
     expect(next.bytesToSend).toEqual(100);
-    next.message._bytesSent += next.bytesToSend;
+    next.messageContents._bytesSent += next.bytesToSend;
 
     // Send the higher-priority. It should preempt the lower-priority.
     queue.enqueue(message1);
     const next2 = queue.getNext(100);
-    expect(next2.message.messageNumber).toEqual(0);
+    expect(next2.messageContents.messageNumber).toEqual(0);
     expect(next2.bytesToSend).toEqual(100);
-    next2.message._bytesSent += next2.bytesToSend;
+    next2.messageContents._bytesSent += next2.bytesToSend;
 
     // Now we should get the remainder of the lower-priority.
     const next3 = queue.getNext(100);
-    expect(next3.message.messageNumber).toEqual(1);
+    expect(next3.messageContents.messageNumber).toEqual(1);
     expect(next3.bytesToSend).toEqual(100);
-    next3.message._bytesSent += next3.bytesToSend;
+    next3.messageContents._bytesSent += next3.bytesToSend;
 
     // The queue is now empty.
     const next4 = queue.getNext(100);
-    expect(next4.message).toBeNull();
+    expect(next4.messageContents).toBeNull();
     expect(next4.bytesToSend).toEqual(0);
   });
 

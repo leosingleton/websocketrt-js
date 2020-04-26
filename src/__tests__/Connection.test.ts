@@ -166,7 +166,7 @@ describe('Connection', () => {
 
     // Cancel the message after 1 second
     await Task.delayAsync(1000);
-    sim.connection1.cancel(message);
+    sim.connection1.cancelMessage(message);
 
     // After 10 seconds, ensure the message is partially, but cancelled before being fully-delivered to c2
     await Task.delayAsync(10000);
@@ -203,7 +203,7 @@ describe('Connection', () => {
 
     // Cancel the message after 1 second
     await Task.delayAsync(1000);
-    simAB.connection1.cancel(message);
+    simAB.connection1.cancelMessage(message);
 
     // After 10 sec, ensure the message is partially received, but cancelled before being fully-delivered to C
     await Task.delayAsync(10000);
