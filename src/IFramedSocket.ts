@@ -29,27 +29,17 @@ export interface IFramedSocket {
   closeAsync(closeReason: string, waitForRemote: boolean): void;
 }
 
-/**
- * Error codes returned by IFramedSocket.ReceiveFrameAsync()
- */
+/** Error codes returned by `IFramedSocket.receiveFrameAsync()` */
 export const enum FramedSocketError {
-  /**
-   * The remote end closed the socket
-   */
+  /** The remote end closed the socket */
   Closing = -1,
 
-  /**
-   * The request was cancelled using the CancellationToken
-   */
+  /** The request was cancelled using the `CancellationToken` */
   Cancelled = -2,
 
-  /**
-   * The received frame exceeded the size of the input buffer supplied
-   */
+  /** The received frame exceeded the size of the input buffer supplied */
   FrameTooLarge = -3,
 
-  /**
-   * The received frame was not of binary type
-   */
+  /** The received frame was not of binary type */
   InvalidType = -4
 }

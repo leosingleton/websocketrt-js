@@ -11,9 +11,7 @@ import { OutgoingMessage } from './OutgoingMessage';
 import { AsyncAutoResetEvent, AsyncEventWaitHandle, AsyncTimerEvent, Queue, Stopwatch, Task, usingAsync } from
   '@leosingleton/commonlibs';
 
-/**
- * Helper class to build a test case using the FramedSocketSimulator
- */
+/** Helper class to build a test case using the `FramedSocketSimulator` */
 export class ConnectionTestSimulator extends FramedSocketSimulator {
   public constructor(latency: number, throughput: number) {
     super(latency, throughput);
@@ -45,7 +43,7 @@ export class ConnectionTestSimulator extends FramedSocketSimulator {
 
   /**
    * Validates all messages received and throws XUnits asserts if they do not match the patterns of messages
-   * created by SimulatedConnection.SendTestMessage(int, int)
+   * created by `SimulatedConnection.sendTestMessage(int, int)`
    */
   public validateTestMessages(): void {
     this.connection1.validateTestMessages();
@@ -74,9 +72,7 @@ export class ConnectionTestSimulator extends FramedSocketSimulator {
   }
 }
 
-/**
- * Wrapper around the connection object to provide helper methods for unit tests
- */
+/** Wrapper around the `Connection` object to provide helper methods for unit tests */
 export class SimulatedConnection extends Connection {
   public constructor(socket: IFramedSocket, connectionName: string) {
     super(socket, null, connectionName);
@@ -100,9 +96,7 @@ export class SimulatedConnection extends Connection {
     }, MessageCallbackEvents.Cancelled);
   }
 
-  /**
-   * Messages received. The first element in the tuple is the message; the second the optional message header.
-   */
+  /** Messages received. The first element in the tuple is the message; the second the optional message header. */
   public messages = new Queue<Message>();
 
   /** The number of messages that have been fully received */
@@ -137,7 +131,7 @@ export class SimulatedConnection extends Connection {
    * that disassembly/reassembly of frames works correctly.
    * @param bytes Message size, in bytes
    * @param priority Message priority (0 = highest)
-   * @returns OutgoingMessage which can be used to cancel or monitor progress
+   * @returns `OutgoingMessage` which can be used to cancel or monitor progress
    */
   public sendTestMessage(bytes: number, priority = 0): Promise<OutgoingMessage> {
     const message = new Message(bytes);
@@ -182,7 +176,7 @@ export class SimulatedConnection extends Connection {
 
   /**
    * Validates all messages received and throws XUnits asserts if they do not match the patterns of messages
-   * created by sendTestMessage(int, int)
+   * created by `sendTestMessage(int, int)`
    */
   public validateTestMessages(): void {
     let message: Message;

@@ -16,7 +16,7 @@ const WS_CLOSING = 2;
 const WS_CLOSED = 3;
 
 /**
- * Maps a WebSocket to the IFramedSocket interface
+ * Maps a WebSocket to the `IFramedSocket` interface
  */
 export class WSFramedSocket implements IFramedSocket {
   public constructor(ws: WebSocket) {
@@ -32,9 +32,7 @@ export class WSFramedSocket implements IFramedSocket {
     ws.onclose = () => { this._isClosed.setEvent(); };
   }
 
-  /**
-   * Waits for the WebSocket to enter the open state. Throws an exception if it fails to open.
-   */
+  /** Waits for the WebSocket to enter the open state. Throws an exception if it fails to open. */
   public async waitForOpen(): Promise<void> {
     // Wait for either open or closed, whichever happens first
     await AsyncEventWaitHandle.whenAny([this._isOpen, this._isClosed]);
