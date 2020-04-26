@@ -40,7 +40,7 @@ export class ControlFrame {
    *
    * If OpCode is 0x12, the remainder of the control frame contains details about which message numbers to.
    */
-  public data: TransportCapabilities | DataFrameControl[] | MessageCancelControl;
+  public frameData: TransportCapabilities | DataFrameControl[] | MessageCancelControl;
 
   public constructor() {}
 
@@ -52,17 +52,17 @@ export class ControlFrame {
 
     let offset = 8;
     if (opCode === 0x00) {
-      this.data = new TransportCapabilities();
-      offset += this.data.readCapabilities(new Uint8Array(frame.buffer), frame.byteOffset + offset);
+      this.frameData = new TransportCapabilities();
+      offset += this.frameData.readCapabilities(new Uint8Array(frame.buffer), frame.byteOffset + offset);
     } else if (opCode >= 0x01 && opCode <= 0x0f) {
-      this.data = new Array<DataFrameControl>(opCode);
+      this.frameData = new Array<DataFrameControl>(opCode);
       for (let n = 0; n < opCode; n++) {
-        this.data[n] = new DataFrameControl();
-        offset += this.data[n].readFrame(new Uint8Array(frame.buffer), frame.byteOffset + offset);
+        this.frameData[n] = new DataFrameControl();
+        offset += this.frameData[n].readFrame(new Uint8Array(frame.buffer), frame.byteOffset + offset);
       }
     } else if (opCode === 0x12) {
-      this.data = new MessageCancelControl();
-      offset += this.data.read(new Uint8Array(frame.buffer), frame.byteOffset + offset);
+      this.frameData = new MessageCancelControl();
+      offset += this.frameData.read(new Uint8Array(frame.buffer), frame.byteOffset + offset);
     }
   }
 
@@ -74,15 +74,15 @@ export class ControlFrame {
 
     let offset = 8;
     if (this.opCode === 0x00) {
-      const data = this.data as TransportCapabilities;
+      const data = this.frameData as TransportCapabilities;
       offset += data.writeCapabilities(frame, offset);
     } else if (this.opCode >= 0x01 && this.opCode <= 0x0f) {
-      const data = this.data as DataFrameControl[];
+      const data = this.frameData as DataFrameControl[];
       for (const d of data) {
         offset += d.writeFrame(frame, offset);
       }
     } else if (this.opCode === 0x12) {
-      const data = this.data as MessageCancelControl;
+      const data = this.frameData as MessageCancelControl;
       offset += data.write(frame, offset);
     }
 

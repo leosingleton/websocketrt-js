@@ -226,7 +226,7 @@ export class Connection {
         if (controlFrame.opCode === 0x00) {
           // Received a capabilities message. Compute the intersection of the two libraries.
           this._negotiatedCapabilities = TransportCapabilities.negotiate(TransportCapabilities.getLocalCapabilties(),
-            controlFrame.data as TransportCapabilities);
+            controlFrame.frameData as TransportCapabilities);
 
           // If we did not send a capabilities message yet, and the other end handles it, send one
           if ((this._negotiatedCapabilities.capabilities1 & TransportCapabilities1.Capabilities) !== 0 &&
@@ -244,7 +244,7 @@ export class Connection {
           receiveTimer.startTimer();
           bytesReceived = 0;
 
-          const dataFrames = controlFrame.data as DataFrameControl[];
+          const dataFrames = controlFrame.frameData as DataFrameControl[];
           for (let n = 0; n < controlFrame.opCode; n++) {
             const dataFrame = dataFrames[n];
 
@@ -272,7 +272,7 @@ export class Connection {
           this._missedPingCount = 0;
         } else if (controlFrame.opCode === 0x12) {
           // Cancel messages in progress
-          const cancellationDetails = controlFrame.data as MessageCancelControl;
+          const cancellationDetails = controlFrame.frameData as MessageCancelControl;
           this.cancelReceivedMessages(cancellationDetails.messageNumbers);
         }
 
@@ -607,7 +607,7 @@ export class Connection {
     controlFrame.opCode = opCode;
     controlFrame.rttEstimate = this._localRttEstimate.getValue();
     controlFrame.throughputEstimate = this._inboundThroughputEstimate.getValue();
-    controlFrame.data = data;
+    controlFrame.frameData = data;
     const controlFrameBytes = controlFrame.writeFrame();
 
     // Send the control frame
