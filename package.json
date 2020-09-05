@@ -1,6 +1,6 @@
 {
   "name": "websocketrt",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "author": "Leo C. Singleton IV <leo@leosingleton.com>",
   "description": "WebSocketRT: Real-time websocket library",
   "homepage": "https://github.com/leosingleton/websocketrt-js",
