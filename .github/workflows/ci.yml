@@ -16,6 +16,7 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: 12.x
+        registry-url: https://registry.npmjs.org
     
     - name: Install NPM Packages
       run: npm install
@@ -37,7 +38,13 @@ jobs:
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: websocketrt-js-${{github.run_number}}.zip
+        name: websocketrt-js-${{ github.run_number }}
         path: |
           **
           !**/node_modules/**
+
+    - name: Publish NPM Package
+      if: github.ref == 'refs/heads/master'
+      run: npm publish --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
