@@ -3,8 +3,8 @@ name: CI
 on: push
 
 jobs:
-  build:
-    name: Build
+  js:
+    name: Build JavaScript NPM Package
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
@@ -19,32 +19,32 @@ jobs:
         registry-url: https://registry.npmjs.org
     
     - name: Install NPM Packages
-      run: npm install
+      run: cd js && npm install
 
     - name: Lint
-      run: npm run lint
+      run: cd js && npm run lint
 
     - name: Compile
-      run: npm run build
+      run: cd js && npm run build
 
     - name: Execute Unit Tests
-      run: npm run test
+      run: cd js && npm run test
 
     - name: Publish Code Coverage
       uses: codecov/codecov-action@v1
       with:
-        file: build/cobertura-coverage.xml
+        file: js/build/cobertura-coverage.xml
 
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v2
       with:
         name: websocketrt-js-${{ github.run_number }}
         path: |
-          **
+          js/**
           !**/node_modules/**
 
     - name: Publish NPM Package
       if: github.ref == 'refs/heads/master'
-      run: npm publish --access public
+      run: cd js && npm publish --access public
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
