@@ -44,7 +44,7 @@ jobs:
           !**/node_modules/**
 
     - name: Publish NPM Package
-      #if: github.ref == 'refs/heads/master'
+      if: github.ref == 'refs/heads/master'
       uses: JS-DevTools/npm-publish@v1
       with:
         package: js/package.json
@@ -88,7 +88,7 @@ jobs:
           dotnet/**
 
     - name: Publish NuGet Package
-      #if: github.ref == 'refs/heads/master'
+      if: github.ref == 'refs/heads/master'
       uses: rohith/publish-nuget@v2
       with:
         PROJECT_FILE_PATH: dotnet/WebSocketRT/LeoSingleton.WebSocketRT.csproj
