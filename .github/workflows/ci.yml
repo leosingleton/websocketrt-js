@@ -44,10 +44,11 @@ jobs:
           !**/node_modules/**
 
     - name: Publish NPM Package
-      if: github.ref == 'refs/heads/master'
-      run: cd js && npm publish --access public
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      #if: github.ref == 'refs/heads/master'
+      uses: JS-DevTools/npm-publish@v1
+      with:
+        package: js/package.json
+        token: ${{ secrets.NPM_TOKEN }}
 
   dotnet:
     name: Build .NET Core NuGet Package
@@ -62,8 +63,6 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 3.1.x
-      env:
-        NUGET_AUTH_TOKEN: ${{ secrets.NUGET_AUTH_TOKEN }}
 
     - name: Compile
       run: |
@@ -83,7 +82,9 @@ jobs:
   
     - name: Publish NuGet Package
       #if: github.ref == 'refs/heads/master'
-      run: |
-        cd dotnet/
-        dotnet pack -c Release
-        dotnet nuget push -s https://api.nuget.org/v3/index.json WebSocketRT/bin/Release/*.nupkg
+      uses: rohith/publish-nuget@v2
+      with:
+        PROJECT_FILE_PATH: dotnet/WebSocketRT/LeoSingleton.WebSocketRT.csproj
+        TAG_FORMAT: dotnet-v*
+        NUGET_KEY: ${{ secrets.NUGET_AUTH_TOKEN }}
+        INCLUDE_SYMBOLS: true
