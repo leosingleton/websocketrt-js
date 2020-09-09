@@ -1,8 +1,8 @@
-﻿using Nito.AsyncEx;
-using System;
+﻿using System;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using LeoSingleton.CommonLibs.Coordination;
 
 namespace LeoSingleton.WebSocketRT.Simulator
 {
@@ -60,7 +60,7 @@ namespace LeoSingleton.WebSocketRT.Simulator
             var c = new Connection(new WSFramedSocket(ws));
             c.RegisterCallback(OnMessageReceived);
             c.BeginDispatch();
-            var cLock = new AsyncLock();
+            var cLock = new AsyncMutex();
 
             foreach (var msg in messages)
             {
@@ -70,9 +70,14 @@ namespace LeoSingleton.WebSocketRT.Simulator
                     {
                         var m = new Message(msg.MessageSize);
                         FramedSocketSimulator.FillBufferWithTestPattern(m.Payload);
-                        using (await cLock.LockAsync())
+                        await cLock.Lock();
+                        try
                         {
                             await c.Send(m, msg.Priority);
+                        }
+                        finally
+                        {
+                            cLock.Unlock();
                         }
 
                         await Task.Delay(msg.SecondsDelay * 1000);

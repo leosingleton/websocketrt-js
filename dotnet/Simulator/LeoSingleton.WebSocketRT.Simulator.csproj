@@ -9,6 +9,6 @@
     <ProjectReference Include="..\WebSocketRT\LeoSingleton.WebSocketRT.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Nito.AsyncEx" Version="5.0.0" />
+    <PackageReference Include="LeoSingleton.CommonLibs" Version="0.1.0" />
   </ItemGroup>
 </Project>
