@@ -3,8 +3,8 @@ name: CI
 on: push
 
 jobs:
-  build:
-    name: Build
+  js:
+    name: Build JavaScript NPM Package
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
@@ -19,32 +19,80 @@ jobs:
         registry-url: https://registry.npmjs.org
     
     - name: Install NPM Packages
-      run: npm install
+      run: cd js && npm install
 
     - name: Lint
-      run: npm run lint
+      run: cd js && npm run lint
 
     - name: Compile
-      run: npm run build
+      run: cd js && npm run build
 
     - name: Execute Unit Tests
-      run: npm run test
+      run: cd js && npm run test
 
     - name: Publish Code Coverage
       uses: codecov/codecov-action@v1
       with:
-        file: build/cobertura-coverage.xml
+        file: js/build/cobertura-coverage.xml
 
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v2
       with:
         name: websocketrt-js-${{ github.run_number }}
         path: |
-          **
+          js/**
           !**/node_modules/**
 
     - name: Publish NPM Package
       if: github.ref == 'refs/heads/master'
-      run: npm publish --access public
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      uses: JS-DevTools/npm-publish@v1
+      with:
+        package: js/package.json
+        token: ${{ secrets.NPM_TOKEN }}
+
+  dotnet:
+    name: Build .NET Core NuGet Package
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.x
+
+    - name: Compile
+      run: |
+        cd dotnet/
+        dotnet restore
+        dotnet build -c Release
+
+    - name: Run Unit Tests
+      run: |
+        cd dotnet/
+        dotnet test UnitTests/LeoSingleton.WebSocketRT.UnitTests.csproj --collect:"XPlat Code Coverage"
+
+    - name: Publish Code Coverage
+      uses: codecov/codecov-action@v1
+      with:
+        file: dotnet/UnitTests/TestResults/*/coverage.cobertura.xml
+  
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: websocketrt-dotnet-${{ github.run_number }}
+        path: |
+          dotnet/**
+
+    - name: Publish NuGet Package
+      if: github.ref == 'refs/heads/master'
+      uses: rohith/publish-nuget@v2
+      with:
+        PROJECT_FILE_PATH: dotnet/WebSocketRT/LeoSingleton.WebSocketRT.csproj
+        VERSION_REGEX: ^\s*<PackageVersion>(.*)<\/PackageVersion>\s*$
+        TAG_FORMAT: dotnet-v*
+        NUGET_KEY: ${{ secrets.NUGET_AUTH_TOKEN }}
+        INCLUDE_SYMBOLS: true
