@@ -1,4 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿// WebSocketRT: Real-time websocket library
+// Copyright (c) Leo C. Singleton IV <leo@leosingleton.com>
+// See LICENSE in the project root for license information.
+
+using System.Threading.Tasks;
 using LeoSingleton.CommonLibs.Coordination;
 using Xunit;
 

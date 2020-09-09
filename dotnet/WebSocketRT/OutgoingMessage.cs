@@ -1,4 +1,8 @@
-﻿namespace LeoSingleton.WebSocketRT
+﻿// WebSocketRT: Real-time websocket library
+// Copyright (c) Leo C. Singleton IV <leo@leosingleton.com>
+// See LICENSE in the project root for license information.
+
+namespace LeoSingleton.WebSocketRT
 {
     /// <summary>
     /// Object that wraps a <see cref="Message"/> as it is being sent. Returned by

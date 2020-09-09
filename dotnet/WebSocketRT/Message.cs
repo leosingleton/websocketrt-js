@@ -1,4 +1,8 @@
-﻿using Newtonsoft.Json;
+﻿// WebSocketRT: Real-time websocket library
+// Copyright (c) Leo C. Singleton IV <leo@leosingleton.com>
+// See LICENSE in the project root for license information.
+
+using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
 using System.Text;

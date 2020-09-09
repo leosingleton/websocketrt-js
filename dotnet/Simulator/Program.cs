@@ -1,4 +1,8 @@
-﻿using Nito.AsyncEx;
+﻿// WebSocketRT: Real-time websocket library
+// Copyright (c) Leo C. Singleton IV <leo@leosingleton.com>
+// See LICENSE in the project root for license information.
+
+using Nito.AsyncEx;
 using System;
 using System.Net.WebSockets;
 using System.Threading;
