@@ -2,11 +2,10 @@
 // Copyright (c) Leo C. Singleton IV <leo@leosingleton.com>
 // See LICENSE in the project root for license information.
 
-using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
 using System.Text;
-using System.Threading.Tasks;
+using System.Text.Json;
 
 namespace LeoSingleton.WebSocketRT
 {
@@ -118,16 +117,16 @@ namespace LeoSingleton.WebSocketRT
         public T GetPayloadAsJson<T>()
         {
             var payloadString = Encoding.UTF8.GetString(Payload);
-            return JsonConvert.DeserializeObject<T>(payloadString);
+            return JsonSerializer.Deserialize<T>(payloadString);
         }
 
         /// <summary>
         /// Writes the JSON notation for an object into the payload property
         /// </summary>
         /// <param name="obj">Payload to be encoded as JSON</param>
-        public void SetPayloadAsJson(object obj)
+        public void SetPayloadAsJson<T>(T obj)
         {
-            var payloadString = JsonConvert.SerializeObject(obj);
+            var payloadString = JsonSerializer.Serialize(obj);
             Payload = Encoding.UTF8.GetBytes(payloadString);
         }
 
