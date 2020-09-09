@@ -82,8 +82,8 @@ jobs:
         file: dotnet/UnitTests/TestResults/*/coverage.cobertura.xml
   
     - name: Publish NuGet Package
-      if: github.ref == 'refs/heads/master'
+      #if: github.ref == 'refs/heads/master'
       run: |
         cd dotnet/
         dotnet pack -c Release
-        dotnet nuget push WebSocketRT/bin/Release/*.nupkg
+        dotnet nuget push -s https://api.nuget.org/v3/index.json WebSocketRT/bin/Release/*.nupkg
