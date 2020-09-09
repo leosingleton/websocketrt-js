@@ -80,6 +80,13 @@ jobs:
       with:
         file: dotnet/UnitTests/TestResults/*/coverage.cobertura.xml
   
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: websocketrt-dotnet-${{ github.run_number }}
+        path: |
+          dotnet/**
+
     - name: Publish NuGet Package
       #if: github.ref == 'refs/heads/master'
       uses: rohith/publish-nuget@v2
