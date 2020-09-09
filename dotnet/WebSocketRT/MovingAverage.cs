@@ -1,4 +1,8 @@
-﻿using System.Collections.Generic;
+﻿// WebSocketRT: Real-time websocket library
+// Copyright (c) Leo C. Singleton IV <leo@leosingleton.com>
+// See LICENSE in the project root for license information.
+
+using System.Collections.Generic;
 
 namespace LeoSingleton.WebSocketRT
 {
