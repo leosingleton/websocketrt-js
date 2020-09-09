@@ -1,4 +1,8 @@
-﻿using Xunit;
+﻿// WebSocketRT: Real-time websocket library
+// Copyright (c) Leo C. Singleton IV <leo@leosingleton.com>
+// See LICENSE in the project root for license information.
+
+using Xunit;
 
 namespace LeoSingleton.WebSocketRT.UnitTests
 {
