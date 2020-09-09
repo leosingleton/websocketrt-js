@@ -92,6 +92,7 @@ jobs:
       uses: rohith/publish-nuget@v2
       with:
         PROJECT_FILE_PATH: dotnet/WebSocketRT/LeoSingleton.WebSocketRT.csproj
+        VERSION_REGEX: ^\s*<PackageVersion>(.*)<\/PackageVersion>\s*$
         TAG_FORMAT: dotnet-v*
         NUGET_KEY: ${{ secrets.NUGET_AUTH_TOKEN }}
         INCLUDE_SYMBOLS: true
