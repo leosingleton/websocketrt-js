@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 
-namespace WhiteboardServer.Transport
+namespace LeoSingleton.WebSocketRT
 {
     /// <summary>
     /// Thread-safe FIFO queue to dispatch messages from the transport layer

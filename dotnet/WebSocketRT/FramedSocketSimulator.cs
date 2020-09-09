@@ -3,10 +3,10 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using WhiteboardServer.Common;
-using WhiteboardServer.Common.Coordination;
+using LeoSingleton.CommonLibs;
+using LeoSingleton.CommonLibs.Coordination;
 
-namespace WhiteboardServer.Transport
+namespace LeoSingleton.WebSocketRT
 {
     /// <summary>
     /// Simulates a WebSocket with latency for unit testing

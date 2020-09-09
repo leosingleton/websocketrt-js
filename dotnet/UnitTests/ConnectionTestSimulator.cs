@@ -3,11 +3,10 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using WhiteboardServer.Common.Coordination;
-using WhiteboardServer.Transport;
+using LeoSingleton.CommonLibs.Coordination;
 using Xunit;
 
-namespace WhiteboardServer.UnitTests.Transport
+namespace LeoSingleton.WebSocketRT.UnitTests
 {
     /// <summary>
     /// Helper class to build a test case using the <see cref="FramedSocketSimulator"/>

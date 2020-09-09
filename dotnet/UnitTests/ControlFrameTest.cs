@@ -1,7 +1,6 @@
-using WhiteboardServer.Transport;
 using Xunit;
 
-namespace WhiteboardServer.UnitTests.Transport
+namespace LeoSingleton.WebSocketRT.UnitTests
 {
     public class ControlFrameTest
     {

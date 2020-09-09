@@ -48,3 +48,42 @@ jobs:
       run: cd js && npm publish --access public
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  dotnet:
+    name: Build .NET Core NuGet Package
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.x
+      env:
+        NUGET_AUTH_TOKEN: ${{ secrets.NUGET_AUTH_TOKEN }}
+
+    - name: Compile
+      run: |
+        cd dotnet/
+        dotnet restore
+        dotnet build -c Release
+
+    - name: Run Unit Tests
+      run: |
+        cd dotnet/
+        dotnet test UnitTests/LeoSingleton.WebSocketRT.UnitTests.csproj --collect:"XPlat Code Coverage"
+
+    - name: Publish Code Coverage
+      uses: codecov/codecov-action@v1
+      with:
+        file: dotnet/UnitTests/TestResults/*/coverage.cobertura.xml
+  
+    - name: Publish NuGet Package
+      if: github.ref == 'refs/heads/master'
+      run: |
+        cd dotnet/
+        dotnet pack -c Release
+        dotnet nuget push WebSocketRT/bin/Release/*.nupkg

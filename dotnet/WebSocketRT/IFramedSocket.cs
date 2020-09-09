@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace WhiteboardServer.Transport
+namespace LeoSingleton.WebSocketRT
 {
     /// <summary>
     /// Abstraction for a WebSocket-like transport that supports framing. By supporting this generic interface, we can

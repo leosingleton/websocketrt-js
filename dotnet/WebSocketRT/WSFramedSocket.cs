@@ -3,7 +3,7 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace WhiteboardServer.Transport
+namespace LeoSingleton.WebSocketRT
 {
     /// <summary>
     /// Maps a WebSocket to the IFramedSocket interface

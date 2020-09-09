@@ -1,7 +1,6 @@
-﻿using WhiteboardServer.Transport;
-using Xunit;
+﻿using Xunit;
 
-namespace WhiteboardServer.UnitTests.Transport
+namespace LeoSingleton.WebSocketRT.UnitTests
 {
     public class TransportCapabilitiesTest
     {

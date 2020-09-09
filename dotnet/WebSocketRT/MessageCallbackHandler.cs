@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 
-namespace WhiteboardServer.Transport
+namespace LeoSingleton.WebSocketRT
 {
     /// <summary>
     /// <para>

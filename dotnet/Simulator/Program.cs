@@ -4,7 +4,7 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace WhiteboardServer.Transport.Simulator
+namespace LeoSingleton.WebSocketRT.Simulator
 {
     class Program
     {

@@ -5,13 +5,13 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using WhiteboardServer.Common.Coordination;
+using LeoSingleton.CommonLibs.Coordination;
 
 // Allow unit tests of internal classes
-[assembly: InternalsVisibleTo("WhiteboardServer.TransportSimulator")]
-[assembly: InternalsVisibleTo("WhiteboardServer.UnitTests")]
+[assembly: InternalsVisibleTo("LeoSingleton.WebSocketRT.Simulator")]
+[assembly: InternalsVisibleTo("LeoSingleton.WebSocketRT.UnitTests")]
 
-namespace WhiteboardServer.Transport
+namespace LeoSingleton.WebSocketRT
 {
     /// <summary>
     /// Handles a single WebSocket connection

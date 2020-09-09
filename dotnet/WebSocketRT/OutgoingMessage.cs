@@ -1,4 +1,4 @@
-﻿namespace WhiteboardServer.Transport
+﻿namespace LeoSingleton.WebSocketRT
 {
     /// <summary>
     /// Object that wraps a <see cref="Message"/> as it is being sent. Returned by

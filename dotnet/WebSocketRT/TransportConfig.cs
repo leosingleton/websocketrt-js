@@ -1,4 +1,4 @@
-﻿namespace WhiteboardServer.Transport
+﻿namespace LeoSingleton.WebSocketRT
 {
     /// <summary>
     /// Configuration options for the transport layer

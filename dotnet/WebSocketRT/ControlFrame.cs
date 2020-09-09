@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
-using WhiteboardServer.Common;
+using LeoSingleton.CommonLibs;
 
-namespace WhiteboardServer.Transport
+namespace LeoSingleton.WebSocketRT
 {
     /// <summary>
     /// Frames sent over the WebSocket are either data frames containing payload or control frames, which are used for

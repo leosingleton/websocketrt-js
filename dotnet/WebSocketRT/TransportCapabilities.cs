@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using WhiteboardServer.Common;
+using LeoSingleton.CommonLibs;
 
-namespace WhiteboardServer.Transport
+namespace LeoSingleton.WebSocketRT
 {
     /// <summary>
     /// Capabilities negotiated between both ends of the transport during the initial connection

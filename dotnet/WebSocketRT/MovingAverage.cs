@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace WhiteboardServer.Transport
+namespace LeoSingleton.WebSocketRT
 {
     /// <summary>
     /// Calculates a moving average of a set of longs

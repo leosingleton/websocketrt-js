@@ -1,7 +1,6 @@
 ﻿using Xunit;
-using WhiteboardServer.Transport;
 
-namespace WhiteboardServer.UnitTests.Transport
+namespace LeoSingleton.WebSocketRT.UnitTests
 {
     public class MovingAverageTest
     {
